@@ -1,0 +1,7 @@
+[package]
+name = "mmtf"
+version = "0.1.0"
+authors = ["mgxm"]
+
+[dependencies]
+byteorder = "1.2.1"
