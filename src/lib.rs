@@ -24,9 +24,11 @@
 #![warn(missing_debug_implementations, missing_docs)]
 
 extern crate byteorder;
+extern crate safe_transmute;
 
 mod decode;
 
+mod binary_decoder;
 struct TransformList {
     chain_index_list: Vec<i32>,
     matrix: Vec<f32>,
