@@ -15,6 +15,21 @@ pub fn interpret_bytes_as_char(bytes: &[u8], lenght: usize, chunk_size: usize) -
     buffer
 }
 
+pub fn interpret_bytes_as_f32(bytes: &[u8]) -> Vec<f32> {
+    let length = bytes.len();
+
+    assert!(length % 4 == 0);
+
+    let mut bytes = Cursor::new(bytes);
+    let mut buffer = Vec::with_capacity(length);
+
+    for b in 0..length / 4 {
+        let r = bytes.read_f32::<BigEndian>().unwrap();
+        buffer.push(r);
+    }
+    buffer
+}
+
 pub fn interpret_bytes_as_i32(bytes: &[u8]) -> Vec<i32> {
     let length = bytes.len();
 
@@ -23,7 +38,7 @@ pub fn interpret_bytes_as_i32(bytes: &[u8]) -> Vec<i32> {
     let mut bytes = Cursor::new(bytes);
     let mut buffer = Vec::with_capacity(length);
 
-    for b in 0..length/4 {
+    for b in 0..length / 4 {
         let r = bytes.read_i32::<BigEndian>().unwrap();
         buffer.push(r);
     }
@@ -61,6 +76,14 @@ mod tests {
         let data = [65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0];
         let expected = vec!['A', 'B', 'C'];
         let actual = interpret_bytes_as_char(&data, 3 as usize, 4 as usize);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_interpret_bytes_as_f32() {
+        let data = [63, 153, 153, 154, 64, 57, 153, 154];
+        let expected = vec![1.2, 2.9];
+        let actual = interpret_bytes_as_f32(&data);
         assert_eq!(expected, actual);
     }
 
