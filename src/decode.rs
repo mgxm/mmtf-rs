@@ -67,7 +67,9 @@ impl<'a> Strategy for Decoder<'a> {
             2 => Ok(StrategyDataTypes::VecInt8(
                 binary_decoder::interpret_bytes_as_i8(&field, header.length as usize),
             )),
-            3 => unimplemented!(),
+            3 => Ok(StrategyDataTypes::VecInt16(
+                binary_decoder::interpret_bytes_as_i16(&field),
+            )),
             4 => Ok(StrategyDataTypes::VecInt32(
                 binary_decoder::interpret_bytes_as_i32(&field),
             )),
@@ -167,6 +169,18 @@ mod tests {
         let expected = vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
         let mut decoder = Decoder::new(&data);
         if let StrategyDataTypes::VecInt8(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
+
+    #[test]
+    fn test_apply_strategy_for_type_3() {
+        let data = [0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 10, 0, 20, 0, 22];
+        let expected = vec![10, 20, 22];
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecInt16(actual) = decoder.apply().unwrap() {
             assert_eq!(expected, actual);
         } else {
             panic!();
