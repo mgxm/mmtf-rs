@@ -3,9 +3,8 @@ use std::char::from_u32;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::Cursor;
 
-
-fn interpret_bytes_as_char(bytes: &[u8], lenght: usize, chunk_size: usize) -> Vec<char> {
-    let mut buffer : Vec<char> = Vec::with_capacity(lenght);
+pub fn interpret_bytes_as_char(bytes: &[u8], lenght: usize, chunk_size: usize) -> Vec<char> {
+    let mut buffer: Vec<char> = Vec::with_capacity(lenght);
     for c in bytes.chunks(chunk_size) {
         unsafe {
             let result = guarded_transmute_many::<u32>(&c).unwrap();
@@ -16,7 +15,9 @@ fn interpret_bytes_as_char(bytes: &[u8], lenght: usize, chunk_size: usize) -> Ve
     buffer
 }
 
-fn interpret_bytes_as_i32(bytes: &[u8], lenght: usize) -> Vec<i32> {
+pub fn interpret_bytes_as_i32(bytes: &[u8]) -> Vec<i32> {
+
+
     let mut bytes = Cursor::new(bytes);
     let mut buffer = Vec::new();
     for b in 0..lenght {
@@ -27,7 +28,7 @@ fn interpret_bytes_as_i32(bytes: &[u8], lenght: usize) -> Vec<i32> {
     buffer
 }
 
-fn interpret_bytes_as_i8(bytes: &[u8], lenght: usize) -> Vec<i8> {
+pub fn interpret_bytes_as_i8(bytes: &[u8], lenght: usize) -> Vec<i8> {
     let mut bytes = Cursor::new(bytes);
     let mut buffer = Vec::new();
     for b in 0..lenght {
@@ -38,7 +39,7 @@ fn interpret_bytes_as_i8(bytes: &[u8], lenght: usize) -> Vec<i8> {
     buffer
 }
 
-fn interpret_bytes_as_i16(bytes: &[u8], lenght: usize) -> Vec<i16> {
+pub fn interpret_bytes_as_i16(bytes: &[u8], lenght: usize) -> Vec<i16> {
     let mut bytes = Cursor::new(bytes);
     let mut buffer = Vec::new();
     for b in 0..lenght {
@@ -48,7 +49,6 @@ fn interpret_bytes_as_i16(bytes: &[u8], lenght: usize) -> Vec<i16> {
     assert!(buffer.len() == lenght);
     buffer
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn test_interpret_bytes_as_i8()  {
+    fn test_interpret_bytes_as_i8() {
         let data = [1, 1, 1];
         let expected = vec![1, 1, 1];
         let actual = interpret_bytes_as_i8(&data, 3 as usize);
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn test_interpret_bytes_as_i16()  {
+    fn test_interpret_bytes_as_i16() {
         let data = [0, 10, 0, 20, 0, 22];
         let expected = vec![10, 20, 22];
         let actual = interpret_bytes_as_i16(&data, 3 as usize);

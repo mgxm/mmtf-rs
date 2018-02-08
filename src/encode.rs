@@ -7,5 +7,5 @@ pub enum StrategyDataTypes {
 }
 
 pub trait Strategy {
-    fn apply(&self) -> Result<StrategyDataTypes, String>;
+    fn apply(&mut self) -> Result<StrategyDataTypes, &'static str>;
 }

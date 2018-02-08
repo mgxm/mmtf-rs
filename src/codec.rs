@@ -1,9 +1,9 @@
 use std::iter;
 
-struct RunLength;
+pub struct RunLength;
 
 impl RunLength {
-    fn decode(bytes: &[i32]) -> Vec<i32> {
+    pub fn decode(bytes: &[i32]) -> Vec<i32> {
         let mut res: Vec<i32> = Vec::new();
 
         for v in bytes.chunks(2) {
@@ -17,10 +17,10 @@ impl RunLength {
     }
 }
 
-struct Delta;
+pub struct Delta;
 
 impl Delta {
-    fn decode(bytes: &[i32]) -> Vec<i32> {
+    pub fn decode(bytes: &[i32]) -> Vec<i32> {
         let mut buffer = Vec::with_capacity(bytes.len() as usize);
 
         // The first entry in the array is left as is
