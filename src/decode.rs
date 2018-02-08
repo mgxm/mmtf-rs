@@ -3,6 +3,10 @@ use std::io::Cursor;
 use std::io::Read;
 use byteorder::{BigEndian, ReadBytesExt};
 
+use super::encode::{Strategy, StrategyDataTypes};
+use super::codec::{Delta, RunLength};
+use super::binary_decoder;
+
 trait Decode {
     fn decode(&mut self);
 }
@@ -51,6 +55,46 @@ impl<'a> Decoder<'a> {
     }
 }
 
+impl<'a> Strategy for Decoder<'a> {
+    fn apply(&mut self) -> Result<StrategyDataTypes, &'static str> {
+        let header = Header::read_info(self).unwrap();
+        let field = self.read_field().unwrap();
+
+        match header.codec {
+            1 => unimplemented!(),
+            2 => Ok(StrategyDataTypes::VecInt8(
+                binary_decoder::interpret_bytes_as_i8(&field, header.length as usize),
+            )),
+            3 => unimplemented!(),
+            4 => Ok(StrategyDataTypes::VecInt32(
+                binary_decoder::interpret_bytes_as_i32(&field),
+            )),
+            5 => Ok(StrategyDataTypes::VecChar(
+                binary_decoder::interpret_bytes_as_char(
+                    &field,
+                    header.length as usize,
+                    header.parameter as usize,
+                ),
+            )),
+            6 => unimplemented!(),
+            7 => unimplemented!(),
+            8 => {
+                let asi32 = binary_decoder::interpret_bytes_as_i32(&field);
+                let runlen = RunLength::decode(&asi32);
+                let delta = Delta::decode(&runlen);
+
+                Ok(StrategyDataTypes::VecInt32(delta))
+            }
+            9 => unimplemented!(),
+            10 => unimplemented!(),
+            11 => unimplemented!(),
+            12 => unimplemented!(),
+            13 => unimplemented!(),
+            14 => unimplemented!(),
+            15 => unimplemented!(),
+            _ => Err("nothing here"),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -99,4 +143,72 @@ mod tests {
         assert_eq!(expected, actual);
     }
 
+    #[test]
+    fn test_apply_strategy_for_type_2() {
+        let data = [
+            0, 0, 0, 2, 0, 0, 0, 10, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+        ];
+        let expected = vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecInt8(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
+
+    #[test]
+    fn test_apply_strategy_for_type_4() {
+        let data = [
+            0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 5, 0, 0, 0, 40, 0, 0, 0, 27
+        ];
+        let expected = vec![19, 5, 40, 27];
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecInt32(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
+
+    #[test]
+    fn test_apply_strategy_for_type_5() {
+        let data = [
+            0, 0, 0, 5, 0, 0, 0, 8, 0, 0, 0, 4, 65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0, 68, 0, 0, 0,
+            69, 0, 0, 0, 70, 0, 0, 0, 71, 0, 0, 0, 72, 0, 0, 0,
+        ];
+        let expected = vec!['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecChar(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
+
+    #[test]
+    fn test_apply_strategy_for_type_8() {
+        let data = [
+            0, 0, 0, 8, 0, 0, 0, 124, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 7,
+            255, 255, 255, 249, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 7, 255, 255, 255, 249, 0, 0, 0, 1,
+            0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 5, 255, 255, 255,
+            245, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 95,
+        ];
+
+        let expected = vec![
+            0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 10,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1,
+        ];
+
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecInt32(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
 }
