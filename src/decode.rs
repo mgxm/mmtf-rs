@@ -61,7 +61,9 @@ impl<'a> Strategy for Decoder<'a> {
         let field = self.read_field().unwrap();
 
         match header.codec {
-            1 => unimplemented!(),
+            1 => Ok(StrategyDataTypes::VecFloat32(
+                binary_decoder::interpret_bytes_as_f32(&field),
+            )),
             2 => Ok(StrategyDataTypes::VecInt8(
                 binary_decoder::interpret_bytes_as_i8(&field, header.length as usize),
             )),
@@ -141,6 +143,20 @@ mod tests {
 
         let actual = decoder.read_field().unwrap();
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_apply_strategy_for_type_1() {
+        let data = [
+            0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 63, 153, 153, 154, 64, 57, 153, 154
+        ];
+        let expected = vec![1.2, 2.9];
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecFloat32(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
     }
 
     #[test]
