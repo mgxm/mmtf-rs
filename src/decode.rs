@@ -43,6 +43,14 @@ impl<'a> Decoder<'a> {
         let reader = Cursor::new(reader);
         Decoder { reader }
     }
+
+    fn read_field(&mut self) -> Result<Vec<u8>, &'static str> {
+        let mut buffer: Vec<u8> = Vec::new();
+        self.reader.read_to_end(&mut buffer);
+        Ok(buffer)
+    }
+}
+
 }
 
 #[cfg(test)]
@@ -77,4 +85,18 @@ mod tests {
             "The reader dont contain the minimum number of bytes (12) to parse the Header"
         );
     }
+
+    #[test]
+    fn test_parse_field() {
+        let data = [
+            0, 0, 0, 2, 0, 0, 0, 26, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1
+        ];
+        let expected = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let mut decoder = Decoder::new(&data);
+        Header::read_info(&mut decoder).unwrap();
+
+        let actual = decoder.read_field().unwrap();
+        assert_eq!(expected, actual);
+    }
+
 }
