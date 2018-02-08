@@ -16,15 +16,17 @@ pub fn interpret_bytes_as_char(bytes: &[u8], lenght: usize, chunk_size: usize) -
 }
 
 pub fn interpret_bytes_as_i32(bytes: &[u8]) -> Vec<i32> {
+    let length = bytes.len();
 
+    assert!(length % 4 == 0);
 
     let mut bytes = Cursor::new(bytes);
-    let mut buffer = Vec::new();
-    for b in 0..lenght {
+    let mut buffer = Vec::with_capacity(length);
+
+    for b in 0..length/4 {
         let r = bytes.read_i32::<BigEndian>().unwrap();
         buffer.push(r);
     }
-    assert!(buffer.len() == lenght);
     buffer
 }
 
@@ -66,7 +68,7 @@ mod tests {
     fn test_interpret_bytes_as_i32() {
         let data = [0, 0, 0, 19, 0, 0, 0, 5, 0, 0, 0, 40];
         let expected = vec![19, 5, 40];
-        let actual = interpret_bytes_as_i32(&data, 3 as usize);
+        let actual = interpret_bytes_as_i32(&data);
         assert_eq!(expected, actual);
     }
 
