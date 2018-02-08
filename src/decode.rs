@@ -9,7 +9,7 @@ trait Decode {
 }
 
 struct Decoder<'a> {
-    data: Cursor<&'a [u8]>,
+    reader: Cursor<&'a [u8]>,
 }
 
 struct Header {
@@ -19,15 +19,15 @@ struct Header {
 }
 
 impl<'a> Decoder<'a> {
-    fn new(data: &'a [u8]) -> Self {
-        let data = Cursor::new(data);
-        Decoder { data }
+    fn new(reader: &'a [u8]) -> Self {
+        let reader = Cursor::new(reader);
+        Decoder { reader }
     }
 
     fn header(&mut self) -> Result<Header, Error> {
-        let codec = self.data.read_i32::<BigEndian>().unwrap();
-        let length = self.data.read_i32::<BigEndian>().unwrap();
-        let parameter = self.data.read_i32::<BigEndian>().unwrap();
+        let codec = self.reader.read_i32::<BigEndian>().unwrap();
+        let length = self.reader.read_i32::<BigEndian>().unwrap();
+        let parameter = self.reader.read_i32::<BigEndian>().unwrap();
 
         Ok(Header { codec, length, parameter })
     }
@@ -41,7 +41,7 @@ mod tests {
     fn it_create_new_decoder() {
         let data = [1,2,3];
         let decoder = Decoder::new(&data);
-        assert_eq!([1,2,3], decoder.data.into_inner());
+        assert_eq!([1,2,3], decoder.reader.into_inner());
     }
 
     #[test]
