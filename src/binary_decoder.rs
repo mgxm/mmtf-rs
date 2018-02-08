@@ -56,14 +56,17 @@ pub fn interpret_bytes_as_i8(bytes: &[u8], lenght: usize) -> Vec<i8> {
     buffer
 }
 
-pub fn interpret_bytes_as_i16(bytes: &[u8], lenght: usize) -> Vec<i16> {
+pub fn interpret_bytes_as_i16(bytes: &[u8]) -> Vec<i16> {
+    let length = bytes.len();
+
+    assert!(length % 2 == 0);
+
     let mut bytes = Cursor::new(bytes);
-    let mut buffer = Vec::new();
-    for b in 0..lenght {
+    let mut buffer = Vec::with_capacity(length);
+    for b in 0..length / 2 {
         let r = bytes.read_i16::<BigEndian>().unwrap();
         buffer.push(r);
     }
-    assert!(buffer.len() == lenght);
     buffer
 }
 
@@ -107,7 +110,7 @@ mod tests {
     fn test_interpret_bytes_as_i16() {
         let data = [0, 10, 0, 20, 0, 22];
         let expected = vec![10, 20, 22];
-        let actual = interpret_bytes_as_i16(&data, 3 as usize);
+        let actual = interpret_bytes_as_i16(&data);
         assert_eq!(expected, actual);
     }
 }
