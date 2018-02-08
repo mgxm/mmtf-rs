@@ -4,6 +4,7 @@ pub enum StrategyDataTypes {
     VecInt16(Vec<i16>),
     VecInt32(Vec<i32>),
     VecString(Vec<String>),
+    VecChar(Vec<char>),
 }
 
 pub trait Strategy {
