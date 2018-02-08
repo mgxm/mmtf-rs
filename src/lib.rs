@@ -29,6 +29,10 @@ extern crate safe_transmute;
 mod decode;
 
 mod binary_decoder;
+mod codec;
+mod encode;
+mod decode;
+
 struct TransformList {
     chain_index_list: Vec<i32>,
     matrix: Vec<f32>,
