@@ -65,7 +65,7 @@ impl<'a> Strategy for Decoder<'a> {
                 binary_decoder::interpret_bytes_as_f32(&field),
             )),
             2 => Ok(StrategyDataTypes::VecInt8(
-                binary_decoder::interpret_bytes_as_i8(&field, header.length as usize),
+                binary_decoder::interpret_bytes_as_i8(&field),
             )),
             3 => Ok(StrategyDataTypes::VecInt16(
                 binary_decoder::interpret_bytes_as_i16(&field),
@@ -76,7 +76,6 @@ impl<'a> Strategy for Decoder<'a> {
             5 => Ok(StrategyDataTypes::VecChar(
                 binary_decoder::interpret_bytes_as_char(
                     &field,
-                    header.length as usize,
                     header.parameter as usize,
                 ),
             )),

@@ -3,15 +3,19 @@ use std::char::from_u32;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::Cursor;
 
-pub fn interpret_bytes_as_char(bytes: &[u8], lenght: usize, chunk_size: usize) -> Vec<char> {
-    let mut buffer: Vec<char> = Vec::with_capacity(lenght);
+pub fn interpret_bytes_as_char(bytes: &[u8], chunk_size: usize) -> Vec<char> {
+    let length = bytes.len();
+
+    assert!(length % chunk_size == 0);
+
+    let mut buffer: Vec<char> = Vec::with_capacity(length);
+
     for c in bytes.chunks(chunk_size) {
         unsafe {
             let result = guarded_transmute_many::<u32>(&c).unwrap();
             buffer.push(from_u32(result[0]).unwrap());
         }
     }
-    assert!(buffer.len() == lenght);
     buffer
 }
 
@@ -45,14 +49,16 @@ pub fn interpret_bytes_as_i32(bytes: &[u8]) -> Vec<i32> {
     buffer
 }
 
-pub fn interpret_bytes_as_i8(bytes: &[u8], lenght: usize) -> Vec<i8> {
+pub fn interpret_bytes_as_i8(bytes: &[u8]) -> Vec<i8> {
+    let length = bytes.len();
     let mut bytes = Cursor::new(bytes);
     let mut buffer = Vec::new();
-    for b in 0..lenght {
+
+    for b in 0..length {
         let r = bytes.read_i8().unwrap();
         buffer.push(r);
     }
-    assert!(buffer.len() == lenght);
+    assert!(buffer.len() == length);
     buffer
 }
 
@@ -78,7 +84,7 @@ mod tests {
     fn test_interpret_bytes_as_char() {
         let data = [65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0];
         let expected = vec!['A', 'B', 'C'];
-        let actual = interpret_bytes_as_char(&data, 3 as usize, 4 as usize);
+        let actual = interpret_bytes_as_char(&data, 4 as usize);
         assert_eq!(expected, actual);
     }
 
@@ -102,7 +108,7 @@ mod tests {
     fn test_interpret_bytes_as_i8() {
         let data = [1, 1, 1];
         let expected = vec![1, 1, 1];
-        let actual = interpret_bytes_as_i8(&data, 3 as usize);
+        let actual = interpret_bytes_as_i8(&data);
         assert_eq!(expected, actual);
     }
 
