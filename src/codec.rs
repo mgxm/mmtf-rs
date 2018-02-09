@@ -1,8 +1,26 @@
 use std::iter;
 
+
+/// Run-length encoding.
+///
+/// Run-length decoding can generally be used to compress arrays that contain
+/// stretches of equal values. Instead of storing each value itself, stretches
+/// of equal values are represented by the value itself and the occurrence count,
+/// that is a value/count pair.
+///
+/// # Examples
+///
+/// ```
+/// use mmtf::codec::RunLength;
+///
+/// let encoded = [1, 4, 2, 1, 1, 4];
+/// let decoded = RunLength::decode(&encoded);
+/// assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
+/// ```
 pub struct RunLength;
 
 impl RunLength {
+    /// Decode and return the decoded data
     pub fn decode(bytes: &[i32]) -> Vec<i32> {
         let mut res: Vec<i32> = Vec::new();
 
@@ -17,9 +35,31 @@ impl RunLength {
     }
 }
 
+/// Delta encoding.
+///
+/// Delta encoding is used to store an array of numbers. Instead of storing the
+/// numbers themselves, the differences (deltas) between the numbers are stored.
+/// When the values of the deltas are smaller than the numbers themselves they
+/// can be more efficiently packed to require less space.
+///
+/// Note that arrays in which the values change by an identical amount for a range
+/// of consecutive values lend themselves to subsequent run-length encoding.
+///
+/// # Examples
+///
+/// ```
+/// use mmtf::codec::Delta;
+///
+/// let encoded =      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 5];
+/// let expected = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 20];
+///
+/// let decoded = Delta::decode(&encoded);
+/// assert_eq!(expected, decoded);
+/// ```
 pub struct Delta;
 
 impl Delta {
+    /// Decode and return the decoded data
     pub fn decode(bytes: &[i32]) -> Vec<i32> {
         let mut buffer = Vec::with_capacity(bytes.len() as usize);
 
@@ -34,10 +74,31 @@ impl Delta {
     }
 }
 
+/// Integer encoding.
+///
+/// In integer encoding, floating point numbers are converted to integer values
+/// by multiplying with a factor and discard everything after the decimal point.
+/// Depending on the multiplication factor this can change the precision but with
+/// a sufficiently large factor it is lossless. The integer values can then often
+/// be compressed with delta encoding which is the main motivation for it.
+///
+/// # Examples
+///
+/// ```
+/// use mmtf::codec::Integer;
+///
+/// let data = [1.00, 1.00, 0.50];
+/// let encoded = Integer::encode(&data, 100);
+/// assert_eq!(encoded, vec![100, 100, 50]);
+///
+/// let decoded = Integer::decode(&encoded, 100);
+/// assert_eq!(decoded, data);
+/// ```
 pub struct Integer;
 
 impl Integer {
-    fn decode(values: &[i32], factor: i32) -> Vec<f32> {
+    /// Decode and return the decoded data
+    pub fn decode(values: &[i32], factor: i32) -> Vec<f32> {
         let result: Vec<f32> = values
             .iter()
             .map(|x| *x as f32 / factor as f32)
@@ -45,7 +106,8 @@ impl Integer {
         result
     }
 
-    fn encode(values: &[f32], factor: i32) -> Vec<i32> {
+    /// Encode `values` with an desired `factor`
+    pub fn encode(values: &[f32], factor: i32) -> Vec<i32> {
         let result: Vec<i32> = values
             .iter()
             .map(|x| (x * factor as f32) as i32)
