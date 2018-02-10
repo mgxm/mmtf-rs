@@ -26,10 +26,9 @@
 extern crate byteorder;
 extern crate safe_transmute;
 
-mod decode;
 
 mod binary_decoder;
-mod codec;
+pub mod codec;
 mod encode;
 mod decode;
 
