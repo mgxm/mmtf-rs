@@ -1,5 +1,5 @@
 use std::iter;
-
+use std::i16;
 
 /// Run-length encoding.
 ///
@@ -116,6 +116,52 @@ impl Integer {
     }
 }
 
+/// Recursive indexing encoding
+
+/// Recursive indexing encodes values such that the encoded values lie within the
+/// open interval (MIN, MAX). This allows to create a more compact representation
+/// of a 32-bit signed integer array when the majority of values in the array fit
+/// into 16-bit (or 8-bit). To encode each value in the input array the method
+/// stores the value itself if it lies within the open interval (MIN, MAX),
+/// otherwise the MAX (or MIN if the number is negative) interval endpoint is stored
+/// and subtracted from the input value. This process of storing and subtracting is
+/// repeated recursively until the remainder lies within the interval.
+///
+/// Note that `MAX` and `MIN` are the largest and smallest value that can be
+/// represented by the `i16` integer type
+///
+/// # Examples
+///
+/// ```
+/// use mmtf::codec::RecursiveIndexing;
+///
+/// let encoded = [1, 420, 32767, 0, 120, -32768, 0, 32767, 2];
+/// let expected = vec![1, 420, 32767, 120, -32768, 32769];
+///
+/// let decoded = RecursiveIndexing::decode(&encoded);
+/// assert_eq!(expected, decoded);
+/// ```
+pub struct RecursiveIndexing;
+
+impl RecursiveIndexing {
+    /// Decode and return the decoded data
+    pub fn decode(bytes: &[i16]) -> Vec<i32> {
+        let mut output = Vec::new();
+        let mut out_len: i32 = 0;
+
+        for item in bytes {
+            if *item == i16::MAX || *item == i16::MIN {
+                out_len += *item as i32;
+            } else {
+                out_len += *item as i32;
+                output.push(out_len);
+                out_len = 0;
+            }
+        }
+        output
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -148,6 +194,14 @@ mod tests {
         let data = [1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
         let expected = vec![100, 100, 100, 100, 50, 50];
         let actual = Integer::encode(&data, 100);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_codec_recursive_index_encoding() {
+        let data = [1, 420, 32767, 0, 120, -32768, 0, 32767, 2];
+        let expected = vec![1, 420, 32767, 120, -32768, 32769];
+        let actual = RecursiveIndexing::decode(&data);
         assert_eq!(expected, actual);
     }
 }
