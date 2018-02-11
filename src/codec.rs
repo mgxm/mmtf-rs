@@ -1,5 +1,6 @@
 use std::iter;
 use std::i16;
+use itertools::Itertools;
 
 /// Run-length encoding.
 ///
@@ -13,7 +14,10 @@ use std::i16;
 /// ```
 /// use mmtf::codec::RunLength;
 ///
-/// let encoded = [1, 4, 2, 1, 1, 4];
+/// let data = [1, 1, 1, 1, 2, 1, 1, 1, 1];
+/// let encoded = RunLength::encode(&data);
+/// assert_eq!(vec![1, 4, 2, 1, 1, 4], encoded);
+///
 /// let decoded = RunLength::decode(&encoded);
 /// assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
 /// ```
@@ -32,6 +36,17 @@ impl RunLength {
             }
         }
         res
+    }
+
+    /// Encode and return the encoded data
+    pub fn encode(values: &[i32]) -> Vec<i32> {
+        let mut result : Vec<i32> = Vec::new();
+
+        for (key, group) in &values.into_iter().group_by(|v| *v) {
+            result.push(*key);
+            result.push(group.count() as i32);
+        }
+        result
     }
 }
 
@@ -171,6 +186,13 @@ mod tests {
         let encoded = [1, 4, 2, 1, 1, 4];
         let decoded = RunLength::decode(&encoded);
         assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
+    }
+
+    #[test]
+    fn test_encode_run_length() {
+        let encoded = [1, 1, 1, 1, 2, 1, 1, 1, 1];
+        let decoded = RunLength::encode(&encoded);
+        assert_eq!(vec![1, 4, 2, 1, 1, 4], decoded);
     }
 
     #[test]

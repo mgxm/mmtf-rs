@@ -6,3 +6,4 @@ authors = ["mgxm"]
 [dependencies]
 byteorder = "1.2.1"
 safe-transmute = "0.8"
+itertools = "0.7.6"
