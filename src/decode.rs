@@ -4,7 +4,7 @@ use std::io::Read;
 use byteorder::{BigEndian, ReadBytesExt};
 
 use super::encode::{Strategy, StrategyDataTypes};
-use super::codec::{Delta, RunLength};
+use super::codec::{Delta, RunLength, Integer};
 use super::binary_decoder;
 
 trait Decode {
@@ -88,7 +88,13 @@ impl<'a> Strategy for Decoder<'a> {
 
                 Ok(StrategyDataTypes::VecInt32(delta))
             }
-            9 => unimplemented!(),
+            9 => {
+                let asi32 = binary_decoder::interpret_bytes_as_i32(&field);
+                let runlen = RunLength::decode(&asi32);
+                let integer = Integer::decode(&runlen, header.parameter);
+
+                Ok(StrategyDataTypes::VecFloat32(integer))
+            },
             10 => unimplemented!(),
             11 => unimplemented!(),
             12 => unimplemented!(),
@@ -235,6 +241,20 @@ mod tests {
 
         let mut decoder = Decoder::new(&data);
         if let StrategyDataTypes::VecInt32(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
+
+    #[test]
+    fn test_apply_strategy_for_type_9() {
+        let data = [0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0, 100, 0, 0, 0, 150, 0, 0, 0, 1, 0, 0, 1, 24, 0, 0, 0, 1, 0, 0, 0, 150, 0, 0, 0, 3, 0, 0, 0, 250, 0, 0, 0, 3];
+
+        let expected = vec![1.5, 2.8, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5];
+
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecFloat32(actual) = decoder.apply().unwrap() {
             assert_eq!(expected, actual);
         } else {
             panic!();
