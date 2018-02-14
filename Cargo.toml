@@ -5,7 +5,6 @@ authors = ["mgxm"]
 
 [dependencies]
 byteorder = "1.2.1"
-safe-transmute = "0.8"
 itertools = "0.7.6"
 num-traits = "0.2.0"
 num-integer = "0.1"

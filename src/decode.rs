@@ -4,7 +4,8 @@ use std::io::Read;
 use byteorder::{BigEndian, ReadBytesExt};
 
 use super::encode::{Strategy, StrategyDataTypes};
-use super::codec::{Delta, RunLength, Integer};
+use super::encoding::{Delta, RunLength, IntegerEncoding};
+use super::codec::{DeltaRunlength};
 use super::binary_decoder;
 
 trait Decode {
@@ -61,37 +62,33 @@ impl<'a> Strategy for Decoder<'a> {
         let field = self.read_field().unwrap();
 
         match header.codec {
-            1 => Ok(StrategyDataTypes::VecFloat32(
-                binary_decoder::interpret_bytes_as_f32(&field),
-            )),
+            1 =>{
+                let decoded : Vec<f32> = binary_decoder::Interpret::from(&field[..]);
+                Ok(StrategyDataTypes::VecFloat32(decoded))
+            },
             2 => Ok(StrategyDataTypes::VecInt8(
-                binary_decoder::interpret_bytes_as_i8(&field),
+                binary_decoder::Interpret::from(&field[..]),
             )),
             3 => Ok(StrategyDataTypes::VecInt16(
-                binary_decoder::interpret_bytes_as_i16(&field),
+                binary_decoder::Interpret::from(&field[..]),
             )),
             4 => Ok(StrategyDataTypes::VecInt32(
-                binary_decoder::interpret_bytes_as_i32(&field),
+                binary_decoder::Interpret::from(&field[..]),
             )),
-            5 => Ok(StrategyDataTypes::VecChar(
-                binary_decoder::interpret_bytes_as_char(
-                    &field,
-                    header.parameter as usize,
-                ),
-            )),
+            5 => {
+                let result : Vec<char> = binary_decoder::Interpret::from(&field[..]);
+                Ok(StrategyDataTypes::VecChar(result))
+            },
             6 => unimplemented!(),
             7 => unimplemented!(),
             8 => {
-                let asi32 = binary_decoder::interpret_bytes_as_i32(&field);
-                let runlen = RunLength::decode(&asi32);
-                let delta = Delta::decode(&runlen);
-
-                Ok(StrategyDataTypes::VecInt32(delta))
+                let result = DeltaRunlength::decode(&field);
+                Ok(StrategyDataTypes::VecInt32(result))
             }
             9 => {
-                let asi32 = binary_decoder::interpret_bytes_as_i32(&field);
+                let asi32 : Vec<i32> = binary_decoder::Interpret::from(&field[..]);
                 let runlen = RunLength::decode(&asi32);
-                let integer = Integer::decode(&runlen, header.parameter);
+                let integer = IntegerEncoding::decode(&runlen, header.parameter);
 
                 Ok(StrategyDataTypes::VecFloat32(integer))
             },

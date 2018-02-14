@@ -1,257 +1,189 @@
-use std::iter;
-use std::i16;
-use itertools::Itertools;
-use num_integer;
-use num_traits::{AsPrimitive, NumCast};
+use num_integer::Integer;
+use num_traits::{AsPrimitive, Float, NumCast, PrimInt, ToPrimitive};
+use std::fmt::Debug;
 
-/// Run-length encoding.
+use binary_decoder::Interpret;
+use binary_decoder;
+use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
+
+/// Delta & Runlength
 ///
-/// Run-length decoding can generally be used to compress arrays that contain
-/// stretches of equal values. Instead of storing each value itself, stretches
-/// of equal values are represented by the value itself and the occurrence count,
-/// that is a value/count pair.
+/// Description Interpret bytes as array of 32-bit signed integers,
+/// then run-length decode into array of 32-bit signed integers,
+/// then delta decode into array of 32-bit signed integers.
 ///
 /// # Examples
 ///
 /// ```
-/// use mmtf::codec::RunLength;
+/// use mmtf::codec::DeltaRunlength;
 ///
-/// let data = [1, 1, 1, 1, 2, 1, 1, 1, 1];
-/// let encoded = RunLength::encode(&data);
-/// assert_eq!(vec![1, 4, 2, 1, 1, 4], encoded);
+/// let data = [1, 2, 3, 4];
+/// let encoded = DeltaRunlength::encode(&data);
+/// assert_eq!(encoded, vec![0, 0, 0, 1, 0, 0, 0, 4]);
 ///
-/// let decoded = RunLength::decode(&encoded);
-/// assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
-/// ```
-pub struct RunLength;
-
-impl RunLength {
-    /// Decode and return the decoded data
-    // TODO: verify if 'AsPrimitive<T>' is the better and
-    // the correct way to handle generics over primitives types.
-    pub fn decode<T>(bytes: &[T]) -> Vec<i32>
-    where
-        T: num_integer::Integer + NumCast + AsPrimitive<T>,
-    {
-        let mut res: Vec<i32> = Vec::new();
-
-        for v in bytes.chunks(2) {
-            let value = &v[0];
-            let repeat = &v[1];
-            let chunks: usize = NumCast::from(*repeat).unwrap();
-            for i in iter::repeat(value).take(chunks) {
-                let value: i32 = NumCast::from(*i).unwrap();
-                res.push(value);
-            }
-        }
-        res
-    }
-
-    /// Encode and return the encoded data
-    pub fn encode<T>(values: &[T]) -> Vec<i32>
-    where
-        T: num_integer::Integer + NumCast + AsPrimitive<T>,
-    {
-        let mut result: Vec<i32> = Vec::new();
-
-        for (key, group) in &values.into_iter().group_by(|v| *v) {
-            let key: i32 = NumCast::from(*key).unwrap();
-            result.push(key);
-            result.push(group.count() as i32);
-        }
-        result
-    }
-}
-
-/// Delta encoding.
-///
-/// Delta encoding is used to store an array of numbers. Instead of storing the
-/// numbers themselves, the differences (deltas) between the numbers are stored.
-/// When the values of the deltas are smaller than the numbers themselves they
-/// can be more efficiently packed to require less space.
-///
-/// Note that arrays in which the values change by an identical amount for a range
-/// of consecutive values lend themselves to subsequent run-length encoding.
-///
-/// # Examples
-///
-/// ```
-/// use mmtf::codec::Delta;
-///
-/// let encoded =      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 5];
-/// let expected = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 20];
-///
-/// let decoded = Delta::decode(&encoded);
-/// assert_eq!(expected, decoded);
-/// ```
-pub struct Delta;
-
-impl Delta {
-    /// Decode and return the decoded data
-    pub fn decode(bytes: &[i32]) -> Vec<i32> {
-        let mut buffer = Vec::with_capacity(bytes.len() as usize);
-
-        // The first entry in the array is left as is
-        buffer.push(bytes[0]);
-
-        for (index, value) in bytes.iter().skip(1).enumerate() {
-            let position = buffer[index];
-            buffer.push(position + value)
-        }
-        buffer
-    }
-}
-
-/// Integer encoding.
-///
-/// In integer encoding, floating point numbers are converted to integer values
-/// by multiplying with a factor and discard everything after the decimal point.
-/// Depending on the multiplication factor this can change the precision but with
-/// a sufficiently large factor it is lossless. The integer values can then often
-/// be compressed with delta encoding which is the main motivation for it.
-///
-/// # Examples
-///
-/// ```
-/// use mmtf::codec::Integer;
-///
-/// let data = [1.00, 1.00, 0.50];
-/// let encoded = Integer::encode(&data, 100);
-/// assert_eq!(encoded, vec![100, 100, 50]);
-///
-/// let decoded = Integer::decode(&encoded, 100);
+/// let decoded = DeltaRunlength::decode(&encoded);
 /// assert_eq!(decoded, data);
 /// ```
-pub struct Integer;
+pub struct DeltaRunlength;
 
-impl Integer {
-    /// Decode and return the decoded data
-    pub fn decode<T>(values: &[T], factor: i32) -> Vec<f32>
-    where
-        T: num_integer::Integer + NumCast + AsPrimitive<T>,
-    {
-        let result: Vec<f32> = values
-            .iter()
-            .map(|x| {
-                let value: f32 = NumCast::from(*x).unwrap();
-                value / factor as f32
-            })
-            .collect();
-        result
+impl DeltaRunlength {
+    pub fn decode(bytes: &[u8]) -> Vec<i32> {
+        let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
+        let runlen = RunLength::decode(&asi32);
+        let delta = Delta::decode(&runlen);
+
+        delta
     }
 
-    /// Encode `values` with an desired `factor`
-    pub fn encode(values: &[f32], factor: i32) -> Vec<i32> {
-        let result: Vec<i32> = values
-            .iter()
-            .map(|x| (x * factor as f32) as i32)
-            .collect();
+    pub fn encode<T>(value: &[T]) -> Vec<u8>
+    where
+        T: Integer + NumCast + PrimInt + ToPrimitive,
+    {
+        let delta = Delta::encode(&value);
+        let runlen = RunLength::encode(&delta);
+        let result: Vec<u8> = Interpret::from(&runlen[..]);
         result
     }
 }
 
-/// Recursive indexing encoding
-
-/// Recursive indexing encodes values such that the encoded values lie within the
-/// open interval (MIN, MAX). This allows to create a more compact representation
-/// of a 32-bit signed integer array when the majority of values in the array fit
-/// into 16-bit (or 8-bit). To encode each value in the input array the method
-/// stores the value itself if it lies within the open interval (MIN, MAX),
-/// otherwise the MAX (or MIN if the number is negative) interval endpoint is stored
-/// and subtracted from the input value. This process of storing and subtracting is
-/// repeated recursively until the remainder lies within the interval.
+/// Integer & Runlength encoded 32-bit floating-point number array
 ///
-/// Note that `MAX` and `MIN` are the largest and smallest value that can be
-/// represented by the `i16` integer type
+/// Description Interpret bytes as array of 32-bit signed integers,
+/// then run-length decode into array of 32-bit signed integers, then
+/// integer decode into array of 32-bit floating-point numbers using
+/// the divisor parameter.
 ///
 /// # Examples
 ///
 /// ```
-/// use mmtf::codec::RecursiveIndexing;
+/// use mmtf::codec::DeltaRunlength;
 ///
-/// let encoded = [1, 420, 32767, 0, 120, -32768, 0, 32767, 2];
-/// let expected = vec![1, 420, 32767, 120, -32768, 32769];
+/// let data = [1, 2, 3, 4];
+/// let encoded = DeltaRunlength::encode(&data);
+/// assert_eq!(encoded, vec![0, 0, 0, 1, 0, 0, 0, 4]);
 ///
-/// let decoded = RecursiveIndexing::decode(&encoded);
-/// assert_eq!(expected, decoded);
+/// let decoded = DeltaRunlength::decode(&encoded);
+/// assert_eq!(decoded, data);
 /// ```
-pub struct RecursiveIndexing;
+pub struct IntegerRunLength;
 
-impl RecursiveIndexing {
-    /// Decode and return the decoded data
-    pub fn decode(bytes: &[i16]) -> Vec<i32> {
-        let mut output = Vec::new();
-        let mut out_len: i32 = 0;
+impl IntegerRunLength {
+    pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
+        let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
+        let runlen = RunLength::decode(&asi32);
+        let integer = IntegerEncoding::decode(&runlen, factor);
+        integer
+    }
 
-        for item in bytes {
-            if *item == i16::MAX || *item == i16::MIN {
-                out_len += *item as i32;
-            } else {
-                out_len += *item as i32;
-                output.push(out_len);
-                out_len = 0;
-            }
-        }
-        output
+    pub fn encode<T>(value: &[T], factor: i32) -> Vec<u8>
+    where
+        T: Float + NumCast,
+    {
+        let integer = IntegerEncoding::encode(&value, factor);
+        let runlen = RunLength::encode(&integer);
+        let result: Vec<u8> = Interpret::from(&runlen[..]);
+        result
     }
 }
+
+/// Integer & delta encoded & two-byte-packed 32-bit floating-point number array
+///
+/// Description Interpret bytes as array of 16-bit signed integers, then unpack
+/// into array of 32-bit integers, then delta decode into array of 32-bit integers,
+/// then integer decode into array of 32-bit floating-point numbers using the divisor
+/// parameter.
+///
+/// # Examples
+///
+/// ```
+/// use mmtf::codec::IntegerDeltaRecursive;
+///
+/// let data = [182.00, 182.00, 182.03];
+/// let encoded = IntegerDeltaRecursive::encode(&data, 100);
+/// assert_eq!(encoded, vec![71, 24, 0, 0, 0, 3]);
+///
+/// let decoded = IntegerDeltaRecursive::decode(&encoded, 100);
+/// assert_eq!(decoded, data);
+/// ```
+pub struct IntegerDeltaRecursive;
+
+impl IntegerDeltaRecursive {
+    pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
+        let asi16: Vec<i16> = binary_decoder::Interpret::from(bytes);
+        let recursive = RecursiveIndexing::decode(&asi16);
+        let delta = Delta::decode(&recursive);
+        let integer = IntegerEncoding::decode(&delta, factor);
+        integer
+    }
+
+    pub fn encode<T>(value: &[T], factor: i32) -> Vec<u8>
+    where
+        T: Float + NumCast,
+    {
+        let integer = IntegerEncoding::encode(&value, factor);
+        let delta = Delta::encode(&integer);
+        let recursive = RecursiveIndexing::encode(&delta);
+        let result: Vec<u8> = Interpret::from(&recursive[..]);
+        result
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn it_decode_run_length() {
-        let encoded = [1, 4, 2, 1, 1, 4];
-        let decoded = RunLength::decode(&encoded);
-        assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
-
-        let encode = [1_i16, 4, 2, 1, 1, 4];
-        let decoded = RunLength::decode(&encoded);
-        assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
-    }
-
-    #[test]
-    fn test_encode_run_length() {
-        let encoded = [1, 1, 1, 1, 2, 1, 1, 1, 1];
-        let decoded = RunLength::encode(&encoded);
-        assert_eq!(vec![1, 4, 2, 1, 1, 4], decoded);
-    }
-
-    #[test]
-    fn test_codec_delta_encoding() {
-        let data = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 5];
-        let expected = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 20];
-        let actual = Delta::decode(&data);
+    fn it_decode_delta_run_length() {
+        let data = [
+            0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 5, 255, 255, 255, 245, 0, 0, 0, 1,
+        ];
+        let expected = vec![0, 1, 2, 3, 5, 5, 6, 7, 8, 9, 10, -1];
+        let mut actual = DeltaRunlength::decode(&data);
         assert_eq!(expected, actual);
     }
 
     #[test]
-    fn test_codec_integer_decoding() {
-        let data = [100, 100, 100, 100, 50, 50];
+    fn it_encode_delta_run_length() {
+        let data = [0, 1, 2, 3, 5, 5, 6, 7, 8, 9, 10, -1];
+        let expected = vec![
+            0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 5, 255, 255, 255, 245, 0, 0, 0, 1,
+        ];
+        let mut actual = DeltaRunlength::encode(&data);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn it_decode_integer_delta_run_length() {
+        let data = [0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2];
         let expected = vec![1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
-        let actual = Integer::decode(&data, 100);
-        assert_eq!(expected, actual);
-
-        let data = [100_i16, 100, 100, 100, 50, 50];
-        let expected = vec![1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
-        let actual = Integer::decode(&data, 100);
+        let mut actual = IntegerRunLength::decode(&data, 100);
         assert_eq!(expected, actual);
     }
 
     #[test]
-    fn test_codec_integer_encoding() {
+    fn it_encode_integer_delta_run_length() {
         let data = [1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
-        let expected = vec![100, 100, 100, 100, 50, 50];
-        let actual = Integer::encode(&data, 100);
+        let expected = vec![0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2];
+        let mut actual = IntegerRunLength::encode(&data, 100);
         assert_eq!(expected, actual);
     }
 
     #[test]
-    fn test_codec_recursive_index_encoding() {
-        let data = [1, 420, 32767, 0, 120, -32768, 0, 32767, 2];
-        let expected = vec![1, 420, 32767, 120, -32768, 32769];
-        let actual = RecursiveIndexing::decode(&data);
+    fn it_decode_integer_delta_recursive() {
+        let data = [71, 24, 0, 0, 0, 2, 255, 255, 0, 100, 255, 253, 0, 5];
+        let expected = vec![182.00, 182.00, 182.02, 182.01, 183.01, 182.98, 183.03];
+        let mut actual = IntegerDeltaRecursive::decode(&data, 100);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn it_encode_integer_delta_recursive() {
+        let data = [182.00, 182.00, 182.02, 182.01, 183.01, 182.98, 183.03];
+        let expected = vec![71, 24, 0, 0, 0, 2, 255, 255, 0, 100, 255, 253, 0, 5];
+        let mut actual = IntegerDeltaRecursive::encode(&data, 100);
         assert_eq!(expected, actual);
     }
 }

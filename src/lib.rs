@@ -24,17 +24,17 @@
 #![warn(missing_debug_implementations, missing_docs)]
 
 extern crate byteorder;
-extern crate safe_transmute;
 extern crate itertools;
 extern crate num_traits;
 extern crate num_integer;
 
 
 
-mod binary_decoder;
+pub mod binary_decoder;
+pub mod encoding;
 pub mod codec;
-mod encode;
-mod decode;
+pub mod encode;
+pub mod decode;
 
 struct TransformList {
     chain_index_list: Vec<i32>,
