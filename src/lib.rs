@@ -26,6 +26,9 @@
 extern crate byteorder;
 extern crate safe_transmute;
 extern crate itertools;
+extern crate num_traits;
+extern crate num_integer;
+
 
 
 mod binary_decoder;

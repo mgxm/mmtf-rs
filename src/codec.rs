@@ -1,6 +1,8 @@
 use std::iter;
 use std::i16;
 use itertools::Itertools;
+use num_integer;
+use num_traits::{AsPrimitive, NumCast};
 
 /// Run-length encoding.
 ///
@@ -25,25 +27,36 @@ pub struct RunLength;
 
 impl RunLength {
     /// Decode and return the decoded data
-    pub fn decode(bytes: &[i32]) -> Vec<i32> {
+    // TODO: verify if 'AsPrimitive<T>' is the better and
+    // the correct way to handle generics over primitives types.
+    pub fn decode<T>(bytes: &[T]) -> Vec<i32>
+    where
+        T: num_integer::Integer + NumCast + AsPrimitive<T>,
+    {
         let mut res: Vec<i32> = Vec::new();
 
         for v in bytes.chunks(2) {
             let value = &v[0];
             let repeat = &v[1];
-            for i in iter::repeat(value).take(*repeat as usize) {
-                res.push(*i);
+            let chunks: usize = NumCast::from(*repeat).unwrap();
+            for i in iter::repeat(value).take(chunks) {
+                let value: i32 = NumCast::from(*i).unwrap();
+                res.push(value);
             }
         }
         res
     }
 
     /// Encode and return the encoded data
-    pub fn encode(values: &[i32]) -> Vec<i32> {
-        let mut result : Vec<i32> = Vec::new();
+    pub fn encode<T>(values: &[T]) -> Vec<i32>
+    where
+        T: num_integer::Integer + NumCast + AsPrimitive<T>,
+    {
+        let mut result: Vec<i32> = Vec::new();
 
         for (key, group) in &values.into_iter().group_by(|v| *v) {
-            result.push(*key);
+            let key: i32 = NumCast::from(*key).unwrap();
+            result.push(key);
             result.push(group.count() as i32);
         }
         result
@@ -184,6 +197,10 @@ mod tests {
     #[test]
     fn it_decode_run_length() {
         let encoded = [1, 4, 2, 1, 1, 4];
+        let decoded = RunLength::decode(&encoded);
+        assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
+
+        let encode = [1_i16, 4, 2, 1, 1, 4];
         let decoded = RunLength::decode(&encoded);
         assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
     }
