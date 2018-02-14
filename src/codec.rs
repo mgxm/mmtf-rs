@@ -126,10 +126,16 @@ pub struct Integer;
 
 impl Integer {
     /// Decode and return the decoded data
-    pub fn decode(values: &[i32], factor: i32) -> Vec<f32> {
+    pub fn decode<T>(values: &[T], factor: i32) -> Vec<f32>
+    where
+        T: num_integer::Integer + NumCast + AsPrimitive<T>,
+    {
         let result: Vec<f32> = values
             .iter()
-            .map(|x| *x as f32 / factor as f32)
+            .map(|x| {
+                let value: f32 = NumCast::from(*x).unwrap();
+                value / factor as f32
+            })
             .collect();
         result
     }
@@ -223,6 +229,11 @@ mod tests {
     #[test]
     fn test_codec_integer_decoding() {
         let data = [100, 100, 100, 100, 50, 50];
+        let expected = vec![1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
+        let actual = Integer::decode(&data, 100);
+        assert_eq!(expected, actual);
+
+        let data = [100_i16, 100, 100, 100, 50, 50];
         let expected = vec![1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
         let actual = Integer::decode(&data, 100);
         assert_eq!(expected, actual);
