@@ -8,7 +8,7 @@ use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
 
 /// Delta & Runlength
 ///
-/// Description Interpret bytes as array of 32-bit signed integers,
+/// Interpret bytes as array of 32-bit signed integers,
 /// then run-length decode into array of 32-bit signed integers,
 /// then delta decode into array of 32-bit signed integers.
 ///
@@ -48,7 +48,7 @@ impl DeltaRunlength {
 
 /// Integer & Runlength encoded 32-bit floating-point number array
 ///
-/// Description Interpret bytes as array of 32-bit signed integers,
+/// Interpret bytes as array of 32-bit signed integers,
 /// then run-length decode into array of 32-bit signed integers, then
 /// integer decode into array of 32-bit floating-point numbers using
 /// the divisor parameter.
@@ -56,13 +56,13 @@ impl DeltaRunlength {
 /// # Examples
 ///
 /// ```
-/// use mmtf::codec::DeltaRunlength;
+/// use mmtf::codec::IntegerRunLength;
 ///
-/// let data = [1, 2, 3, 4];
-/// let encoded = DeltaRunlength::encode(&data);
-/// assert_eq!(encoded, vec![0, 0, 0, 1, 0, 0, 0, 4]);
+/// let data = [1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
+/// let encoded = IntegerRunLength::encode(&data, 100);
+/// assert_eq!(encoded, vec![0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2]);
 ///
-/// let decoded = DeltaRunlength::decode(&encoded);
+/// let decoded = IntegerRunLength::decode(&encoded, 100);
 /// assert_eq!(decoded, data);
 /// ```
 pub struct IntegerRunLength;
