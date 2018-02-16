@@ -5,7 +5,7 @@ use byteorder::{BigEndian, ReadBytesExt};
 
 use super::encode::{Strategy, StrategyDataTypes};
 use super::encoding::{Delta, RunLength, IntegerEncoding};
-use super::codec::{DeltaRunlength};
+use super::codec::{DeltaRunlength, IntegerDeltaRecursive, IntegerRunLength};
 use super::binary_decoder;
 
 trait Decode {
@@ -79,21 +79,32 @@ impl<'a> Strategy for Decoder<'a> {
                 let result : Vec<char> = binary_decoder::Interpret::from(&field[..]);
                 Ok(StrategyDataTypes::VecChar(result))
             },
-            6 => unimplemented!(),
-            7 => unimplemented!(),
+            6 => {
+                let result : Vec<char> = binary_decoder::Interpret::from(&field[..]);
+                Ok(StrategyDataTypes::VecChar(result))
+            },
+            7 => {
+                let bytes: Vec<i32> = binary_decoder::Interpret::from(&field[..]);
+                let result = RunLength::decode(&bytes);
+                Ok(StrategyDataTypes::VecInt32(result))
+            },
             8 => {
                 let result = DeltaRunlength::decode(&field);
                 Ok(StrategyDataTypes::VecInt32(result))
             }
             9 => {
-                let asi32 : Vec<i32> = binary_decoder::Interpret::from(&field[..]);
-                let runlen = RunLength::decode(&asi32);
-                let integer = IntegerEncoding::decode(&runlen, header.parameter);
-
-                Ok(StrategyDataTypes::VecFloat32(integer))
+                let result = IntegerRunLength::decode(&field, header.parameter);
+                Ok(StrategyDataTypes::VecFloat32(result))
             },
-            10 => unimplemented!(),
-            11 => unimplemented!(),
+            10 => {
+                let result = IntegerDeltaRecursive::decode(&field[..], header.parameter);
+                Ok(StrategyDataTypes::VecFloat32(result))
+            },
+            11 => {
+                let values : Vec<i16> = binary_decoder::Interpret::from(&field[..]);
+                let result = IntegerEncoding::decode(&values, header.parameter);
+                Ok(StrategyDataTypes::VecFloat32(result))
+            },
             12 => unimplemented!(),
             13 => unimplemented!(),
             14 => unimplemented!(),
