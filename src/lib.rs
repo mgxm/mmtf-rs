@@ -27,7 +27,13 @@ extern crate byteorder;
 extern crate itertools;
 extern crate num_traits;
 extern crate num_integer;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate rmp_serde as rmps;
 
+use serde::{Deserialize, Serialize};
+use rmps::{Deserializer, Serializer};
 
 
 pub mod binary_decoder;
@@ -36,23 +42,32 @@ pub mod codec;
 pub mod encode;
 pub mod decode;
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct TransformList {
     chain_index_list: Vec<i32>,
     matrix: Vec<f32>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct BioAssemblyList {
     transform_list: Vec<TransformList>,
     name: String,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct EntityList {
     chain_index_list: Vec<i32>,
     description: String,
+    #[serde(rename = "type")]
     type_: String,
     sequence: String,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct GroupList {
     formal_charge_list: Vec<i32>,
     atom_name_list: Vec<String>,
@@ -65,6 +80,8 @@ struct GroupList {
 }
 
 // Struct that hold all the fields from
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Mmtf {
     mmtf_version: String,
     mmtf_producer: String,
