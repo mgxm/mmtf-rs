@@ -45,21 +45,21 @@ pub mod decode;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct TransformList {
+pub struct TransformList {
     chain_index_list: Vec<i32>,
     matrix: Vec<f32>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct BioAssemblyList {
+pub struct BioAssemblyList {
     transform_list: Vec<TransformList>,
     name: String,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct EntityList {
+pub struct EntityList {
     chain_index_list: Vec<i32>,
     description: String,
     #[serde(rename = "type")]
@@ -69,21 +69,21 @@ struct EntityList {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct GroupList {
+pub struct GroupList {
     formal_charge_list: Vec<i32>,
     atom_name_list: Vec<String>,
-    element_list: Vec<String>,
+    element_list: Option<Vec<String>>,
     bond_atom_list: Vec<i32>,
     bond_order_list: Vec<i32>,
     group_name: String,
-    single_letter_code: char,
+    single_letter_code: String,
     chem_comp_type: String,
 }
 
 // Struct that hold all the fields from
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Mmtf {
+pub struct Mmtf {
     mmtf_version: String,
     mmtf_producer: String,
     unit_cell: Option<Vec<f64>>,
@@ -105,22 +105,38 @@ struct Mmtf {
     num_chains: i32,
     num_models: i32,
     group_list: Vec<GroupList>,
-    bond_atom_list: Option<Vec<i32>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
+    bond_atom_list: Vec<i32>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     bond_order_list: Option<Vec<i8>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     x_coord_list: Vec<f32>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     y_coord_list: Vec<f32>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     z_coord_list: Vec<f32>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     b_factor_list: Option<Vec<f32>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     atom_id_list: Option<Vec<i32>>,
-    alt_loc_list: Option<Vec<i32>>,
+    // #[serde(deserialize_with = "decode::as_decoder")]
+    // alt_loc_list: Option<Vec<char>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     occupancy_list: Option<Vec<f32>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     group_id_list: Vec<i32>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     group_type_list: Vec<i32>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     sec_struct_list: Option<Vec<i8>>,
-    ins_code_list: Option<Vec<i32>>,
+    // #[serde(deserialize_with = "decode::as_decoder")]
+    // ins_code_list: Option<Vec<i32>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
     sequence_index_list: Option<Vec<i32>>,
-    chain_id_list: Vec<String>,
-    chain_name_list: Option<Vec<String>>,
+    // #[serde(deserialize_with = "decode::as_decoder")]
+    // chain_id_list: Vec<String>,
+    // #[serde(deserialize_with = "decode::as_decoder")]
+    // chain_name_list: Option<Vec<String>>,
     groups_per_chain: Vec<i32>,
     chains_per_model: Vec<i32>,
 }

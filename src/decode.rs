@@ -2,6 +2,8 @@ use std::iter;
 use std::io::Cursor;
 use std::io::Read;
 use byteorder::{BigEndian, ReadBytesExt};
+use serde::de::{self, Deserialize, Deserializer, SeqAccess, Visitor};
+use serde_bytes;
 
 use super::encode::{Strategy, StrategyDataTypes};
 use super::encoding::{Delta, RunLength, IntegerEncoding};
@@ -112,6 +114,20 @@ impl<'a> Strategy for Decoder<'a> {
             _ => Err("nothing here"),
         }
     }
+}
+
+/// Deserialize the encoded sequence of values
+///
+/// This function is generic over T which can be any type that implements
+/// From<StrategyDataTypes>
+pub fn as_decoder<'de, T, D>(deserialize: D) -> Result<T, D::Error>
+where
+    T: From<StrategyDataTypes>,
+    D: Deserializer<'de>,
+{
+    let re: Vec<u8> = serde_bytes::deserialize(deserialize)?;
+    let decoded = Decoder::new(&re).apply().unwrap();
+    Ok(From::from(decoded))
 }
 
 #[cfg(test)]
