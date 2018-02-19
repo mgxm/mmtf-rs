@@ -35,7 +35,7 @@ extern crate serde_bytes;
 
 use serde::{Deserialize, Serialize};
 use rmps::{Deserializer, Serializer};
-
+use std::fs::File;
 
 pub mod binary_decoder;
 pub mod encoding;
@@ -139,4 +139,12 @@ pub struct Mmtf {
     // chain_name_list: Option<Vec<String>>,
     groups_per_chain: Vec<i32>,
     chains_per_model: Vec<i32>,
+}
+
+impl Mmtf {
+    pub fn from_file(file: &File) -> Self {
+        let mut de = Deserializer::new(file);
+        let mmtf: Mmtf = Deserialize::deserialize(&mut de).unwrap();
+        mmtf
+    }
 }
