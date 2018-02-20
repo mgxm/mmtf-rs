@@ -128,7 +128,6 @@ impl IntegerDeltaRecursive {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

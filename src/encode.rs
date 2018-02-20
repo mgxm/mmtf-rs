@@ -10,36 +10,31 @@ pub enum StrategyDataTypes {
     VecChar(Vec<char>),
 }
 
-impl From<StrategyDataTypes> for Option<Vec<i8>>
-{
+impl From<StrategyDataTypes> for Option<Vec<i8>> {
     fn from(value: StrategyDataTypes) -> Option<Vec<i8>> {
         Some(From::from(value))
     }
 }
 
-impl From<StrategyDataTypes> for Option<Vec<char>>
-{
+impl From<StrategyDataTypes> for Option<Vec<char>> {
     fn from(value: StrategyDataTypes) -> Option<Vec<char>> {
         Some(From::from(value))
     }
 }
 
-impl From<StrategyDataTypes> for Option<Vec<String>>
-{
+impl From<StrategyDataTypes> for Option<Vec<String>> {
     fn from(value: StrategyDataTypes) -> Option<Vec<String>> {
         Some(From::from(value))
     }
 }
 
-impl From<StrategyDataTypes> for Option<Vec<i32>>
-{
+impl From<StrategyDataTypes> for Option<Vec<i32>> {
     fn from(value: StrategyDataTypes) -> Option<Vec<i32>> {
         Some(From::from(value))
     }
 }
 
-impl From<StrategyDataTypes> for Option<Vec<f32>>
-{
+impl From<StrategyDataTypes> for Option<Vec<f32>> {
     fn from(value: StrategyDataTypes) -> Option<Vec<f32>> {
         Some(From::from(value))
     }
@@ -103,8 +98,6 @@ pub trait Strategy {
     fn apply(&mut self) -> Result<StrategyDataTypes, &'static str>;
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,58 +105,58 @@ mod tests {
     #[test]
     fn it_convert_to_vec_i8() {
         let data = StrategyDataTypes::VecInt8(vec![0_i8]);
-        let result : Vec<i8> = From::from(data);
+        let result: Vec<i8> = From::from(data);
         assert_eq!(vec![0_i8], result);
 
         let data = StrategyDataTypes::VecInt8(vec![0_i8]);
-        let result : Option<Vec<i8>> = From::from(data);
+        let result: Option<Vec<i8>> = From::from(data);
         assert_eq!(Some(vec![0_i8]), result);
     }
 
     #[test]
     fn it_convert_to_vec_i16() {
         let data = StrategyDataTypes::VecInt16(vec![0_i16]);
-        let result : Vec<i16> = From::from(data);
+        let result: Vec<i16> = From::from(data);
         assert_eq!(vec![0_i16], result);
     }
 
     #[test]
     fn it_convert_to_vec_i32() {
         let data = StrategyDataTypes::VecInt32(vec![0]);
-        let result : Vec<i32> = From::from(data);
+        let result: Vec<i32> = From::from(data);
         assert_eq!(vec![0], result);
 
         let data = StrategyDataTypes::VecInt32(vec![0]);
-        let result : Option<Vec<i32>> = From::from(data);
+        let result: Option<Vec<i32>> = From::from(data);
         assert_eq!(Some(vec![0]), result);
     }
 
     #[test]
     fn it_convert_to_vec_f32() {
         let data = StrategyDataTypes::VecFloat32(vec![0.0]);
-        let result : Vec<f32> = From::from(data);
+        let result: Vec<f32> = From::from(data);
         assert_eq!(vec![0.0], result);
 
         let data = StrategyDataTypes::VecFloat32(vec![0.0]);
-        let result : Option<Vec<f32>> = From::from(data);
+        let result: Option<Vec<f32>> = From::from(data);
         assert_eq!(Some(vec![0.0]), result);
     }
 
     #[test]
     fn it_convert_to_vec_char() {
         let data = StrategyDataTypes::VecChar(vec!['a']);
-        let result : Vec<char> = From::from(data);
+        let result: Vec<char> = From::from(data);
         assert_eq!(vec!['a'], result);
 
         let data = StrategyDataTypes::VecChar(vec!['a']);
-        let result : Option<Vec<char>> = From::from(data);
+        let result: Option<Vec<char>> = From::from(data);
         assert_eq!(Some(vec!['a']), result);
     }
 
     #[test]
     fn it_convert_to_vec_string() {
         let data = StrategyDataTypes::VecString(vec!["A".to_string()]);
-        let result : Vec<String> = From::from(data);
+        let result: Vec<String> = From::from(data);
         assert_eq!(vec!["A".to_string()], result);
     }
 }

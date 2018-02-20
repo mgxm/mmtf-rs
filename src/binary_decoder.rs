@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn it_interpret_bytes_as_string() {
-        let data = [ 65, 0, 0, 0, 68, 65, 0, 0 ];
+        let data = [65, 0, 0, 0, 68, 65, 0, 0];
         let expected = vec!["A", "DA"];
         let actual: Vec<String> = Interpret::from(&data[..]);
         assert_eq!(expected, actual);
@@ -184,7 +184,7 @@ mod tests {
     fn test_interpret_bytes_as_i32() {
         let data = [0, 0, 0, 19, 0, 0, 0, 5, 0, 0, 0, 40];
         let expected = vec![19, 5, 40];
-        let actual : Vec<i32> = Interpret::from(&data[..]);
+        let actual: Vec<i32> = Interpret::from(&data[..]);
         assert_eq!(expected, actual);
     }
 
@@ -192,7 +192,7 @@ mod tests {
     fn test_interpret_bytes_as_i8() {
         let data = [1, 1, 1];
         let expected = vec![1, 1, 1];
-        let actual : Vec<i8> = Interpret::from(&data[..]);
+        let actual: Vec<i8> = Interpret::from(&data[..]);
         assert_eq!(expected, actual);
     }
 
@@ -200,7 +200,7 @@ mod tests {
     fn test_interpret_bytes_as_i16() {
         let data = [0, 10, 0, 20, 0, 22];
         let expected = vec![10, 20, 22];
-        let actual : Vec<i16> = Interpret::from(&data[..]);
+        let actual: Vec<i16> = Interpret::from(&data[..]);
         assert_eq!(expected, actual);
     }
 }

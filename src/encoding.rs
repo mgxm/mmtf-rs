@@ -224,7 +224,7 @@ impl RecursiveIndexing {
     pub fn encode(bytes: &[i32]) -> Vec<i16> {
         let mut output: Vec<i16> = Vec::new();
         for num in bytes {
-            let mut num  = *num;
+            let mut num = *num;
             if num >= 0 {
                 while num >= i16::MAX as i32 {
                     output.push(i16::MAX);

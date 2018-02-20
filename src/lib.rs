@@ -25,13 +25,13 @@
 
 extern crate byteorder;
 extern crate itertools;
-extern crate num_traits;
 extern crate num_integer;
+extern crate num_traits;
+extern crate rmp_serde as rmps;
 extern crate serde;
+extern crate serde_bytes;
 #[macro_use]
 extern crate serde_derive;
-extern crate rmp_serde as rmps;
-extern crate serde_bytes;
 extern crate serde_json;
 
 pub mod binary_decoder;
@@ -41,5 +41,4 @@ pub mod encode;
 pub mod decode;
 pub mod mmtf;
 
-pub use mmtf::{Mmtf};
-
+pub use mmtf::Mmtf;
