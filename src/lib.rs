@@ -32,119 +32,14 @@ extern crate serde;
 extern crate serde_derive;
 extern crate rmp_serde as rmps;
 extern crate serde_bytes;
-
-use serde::{Deserialize, Serialize};
-use rmps::{Deserializer, Serializer};
-use std::fs::File;
+extern crate serde_json;
 
 pub mod binary_decoder;
 pub mod encoding;
 pub mod codec;
 pub mod encode;
 pub mod decode;
+pub mod mmtf;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TransformList {
-    chain_index_list: Vec<i32>,
-    matrix: Vec<f32>,
-}
+pub use mmtf::{Mmtf};
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BioAssemblyList {
-    transform_list: Vec<TransformList>,
-    name: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EntityList {
-    chain_index_list: Vec<i32>,
-    description: String,
-    #[serde(rename = "type")]
-    type_: String,
-    sequence: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GroupList {
-    formal_charge_list: Vec<i32>,
-    atom_name_list: Vec<String>,
-    element_list: Option<Vec<String>>,
-    bond_atom_list: Vec<i32>,
-    bond_order_list: Vec<i32>,
-    group_name: String,
-    single_letter_code: String,
-    chem_comp_type: String,
-}
-
-// Struct that hold all the fields from
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Mmtf {
-    mmtf_version: String,
-    mmtf_producer: String,
-    unit_cell: Option<Vec<f64>>,
-    space_group: Option<String>,
-    structure_id: Option<String>,
-    title: Option<String>,
-    deposition_date: Option<String>,
-    release_date: Option<String>,
-    ncs_operator_list: Option<Vec<[f32; 16]>>,
-    bio_assembly_list: Option<Vec<BioAssemblyList>>,
-    entity_list: Option<Vec<EntityList>>,
-    experimental_methods: Option<Vec<String>>,
-    resolution: Option<f64>,
-    r_free: Option<f32>,
-    r_work: Option<f64>,
-    num_bonds: i32,
-    num_atoms: i32,
-    num_groups: i32,
-    num_chains: i32,
-    num_models: i32,
-    group_list: Vec<GroupList>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    bond_atom_list: Vec<i32>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    bond_order_list: Option<Vec<i8>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    x_coord_list: Vec<f32>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    y_coord_list: Vec<f32>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    z_coord_list: Vec<f32>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    b_factor_list: Option<Vec<f32>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    atom_id_list: Option<Vec<i32>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    alt_loc_list: Option<Vec<char>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    occupancy_list: Option<Vec<f32>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    group_id_list: Vec<i32>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    group_type_list: Vec<i32>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    sec_struct_list: Option<Vec<i8>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    ins_code_list: Option<Vec<char>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    sequence_index_list: Option<Vec<i32>>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    chain_id_list: Vec<String>,
-    #[serde(deserialize_with = "decode::as_decoder")]
-    chain_name_list: Option<Vec<String>>,
-    groups_per_chain: Vec<i32>,
-    chains_per_model: Vec<i32>,
-}
-
-impl Mmtf {
-    pub fn from_file(file: &File) -> Self {
-        let mut de = Deserializer::new(file);
-        let mmtf: Mmtf = Deserialize::deserialize(&mut de).unwrap();
-        mmtf
-    }
-}
