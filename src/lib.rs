@@ -119,8 +119,8 @@ pub struct Mmtf {
     b_factor_list: Option<Vec<f32>>,
     #[serde(deserialize_with = "decode::as_decoder")]
     atom_id_list: Option<Vec<i32>>,
-    // #[serde(deserialize_with = "decode::as_decoder")]
-    // alt_loc_list: Option<Vec<char>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
+    alt_loc_list: Option<Vec<char>>,
     #[serde(deserialize_with = "decode::as_decoder")]
     occupancy_list: Option<Vec<f32>>,
     #[serde(deserialize_with = "decode::as_decoder")]
@@ -129,14 +129,14 @@ pub struct Mmtf {
     group_type_list: Vec<i32>,
     #[serde(deserialize_with = "decode::as_decoder")]
     sec_struct_list: Option<Vec<i8>>,
-    // #[serde(deserialize_with = "decode::as_decoder")]
-    // ins_code_list: Option<Vec<i32>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
+    ins_code_list: Option<Vec<char>>,
     #[serde(deserialize_with = "decode::as_decoder")]
     sequence_index_list: Option<Vec<i32>>,
-    // #[serde(deserialize_with = "decode::as_decoder")]
-    // chain_id_list: Vec<String>,
-    // #[serde(deserialize_with = "decode::as_decoder")]
-    // chain_name_list: Option<Vec<String>>,
+    #[serde(deserialize_with = "decode::as_decoder")]
+    chain_id_list: Vec<String>,
+    #[serde(deserialize_with = "decode::as_decoder")]
+    chain_name_list: Option<Vec<String>>,
     groups_per_chain: Vec<i32>,
     chains_per_model: Vec<i32>,
 }

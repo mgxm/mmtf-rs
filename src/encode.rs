@@ -24,6 +24,13 @@ impl From<StrategyDataTypes> for Option<Vec<char>>
     }
 }
 
+impl From<StrategyDataTypes> for Option<Vec<String>>
+{
+    fn from(value: StrategyDataTypes) -> Option<Vec<String>> {
+        Some(From::from(value))
+    }
+}
+
 impl From<StrategyDataTypes> for Option<Vec<i32>>
 {
     fn from(value: StrategyDataTypes) -> Option<Vec<i32>> {

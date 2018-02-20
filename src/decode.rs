@@ -78,11 +78,13 @@ impl<'a> Strategy for Decoder<'a> {
                 binary_decoder::Interpret::from(&field[..]),
             )),
             5 => {
-                let result : Vec<char> = binary_decoder::Interpret::from(&field[..]);
-                Ok(StrategyDataTypes::VecChar(result))
+                let result : Vec<String> = binary_decoder::Interpret::from(&field[..]);
+                Ok(StrategyDataTypes::VecString(result))
             },
             6 => {
-                let result : Vec<char> = binary_decoder::Interpret::from(&field[..]);
+                let asi32 : Vec<i32> = binary_decoder::Interpret::from(&field[..]);
+                let run = RunLength::decode(&asi32);
+                let result: Vec<char> = binary_decoder::Interpret::from(&run[..]);
                 Ok(StrategyDataTypes::VecChar(result))
             },
             7 => {
@@ -234,6 +236,20 @@ mod tests {
     fn test_apply_strategy_for_type_5() {
         let data = [
             0, 0, 0, 5, 0, 0, 0, 8, 0, 0, 0, 4, 65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0, 68, 0, 0, 0,
+            69, 0, 0, 0, 70, 0, 0, 0, 71, 0, 0, 0, 72, 0, 0, 0,
+        ];
+        let expected = vec!["A", "B", "C", "D", "E", "F", "G", "H"];
+        let mut decoder = Decoder::new(&data);
+        if let StrategyDataTypes::VecString(actual) = decoder.apply().unwrap() {
+            assert_eq!(expected, actual);
+        } else {
+            panic!();
+        };
+    }
+
+    fn test_apply_strategy_for_type_6() {
+        let data = [
+            0, 0, 0, 6, 0, 0, 0, 8, 0, 0, 0, 4, 65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0, 68, 0, 0, 0,
             69, 0, 0, 0, 70, 0, 0, 0, 71, 0, 0, 0, 72, 0, 0, 0,
         ];
         let expected = vec!['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];

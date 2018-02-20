@@ -1,4 +1,5 @@
 use std::char::from_u32;
+use std::str;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::Cursor;
 use num_traits::{NumCast, PrimInt};
@@ -39,6 +40,38 @@ impl<'a> Interpret<&'a [u8]> for Vec<char> {
         for _ in 0..length / 4 {
             let c = rdr.read_u32::<LittleEndian>().unwrap();
             buffer.push(from_u32(c).unwrap());
+        }
+
+        buffer
+    }
+}
+
+impl<'a> Interpret<&'a [i32]> for Vec<char> {
+    fn from(values: &'a [i32]) -> Vec<char> {
+        let length = values.len();
+
+        let mut buffer: Vec<char> = Vec::with_capacity(length / 4);
+
+        for c in values {
+            buffer.push(from_u32(*c as u32).unwrap());
+        }
+
+        buffer
+    }
+}
+
+impl<'a> Interpret<&'a [u8]> for Vec<String> {
+    fn from(values: &'a [u8]) -> Vec<String> {
+        let length = values.len();
+
+        assert!(length % 4 == 0);
+
+        let mut buffer: Vec<String> = Vec::with_capacity(length / 4);
+        let mut rdr = Cursor::new(values);
+
+        for c in values.chunks(4) {
+            let out = str::from_utf8(&c).unwrap();
+            buffer.push(out.trim_matches('\u{0}').to_string());
         }
 
         buffer
@@ -117,9 +150,17 @@ mod tests {
 
     #[test]
     fn it_interpret_bytes_as_char() {
-        let data = [65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0, 68, 0, 0, 0];
+        let data = [65_u8, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0, 68, 0, 0, 0];
         let expected = vec!['A', 'B', 'C', 'D'];
         let actual: Vec<char> = Interpret::from(&data[..]);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn it_interpret_bytes_as_string() {
+        let data = [ 65, 0, 0, 0, 68, 65, 0, 0 ];
+        let expected = vec!["A", "DA"];
+        let actual: Vec<String> = Interpret::from(&data[..]);
         assert_eq!(expected, actual);
     }
 
