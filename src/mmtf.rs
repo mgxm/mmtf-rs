@@ -69,17 +69,34 @@ pub struct Entity {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupType {
+    /// `Vec` of formal charges
     pub formal_charge_list: Vec<i32>,
+
+    /// `Vec` of atom names, 0 to 5 character `Strings`
     pub atom_name_list: Vec<String>,
+
+    /// `Vec` of elements, 0 to 3 character `Strings`
+    ///
+    /// *Note*: This field is `Optional`
     pub element_list: Option<Vec<String>>,
+
+    /// `Vec` of bonded atom indices
     pub bond_atom_list: Vec<i32>,
+
+    /// `Vec` of bond orders as Integers between 1 and 4
     pub bond_order_list: Vec<i32>,
+
+    /// The name of the group, 0 to 5 characters
     pub group_name: String,
+
+    /// The single letter code, 1 character
     pub single_letter_code: String,
+
+    /// The chemical component type
     pub chem_comp_type: String,
 }
 
-// Struct that hold all the fields from
+/// MMTF Fields
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Mmtf {

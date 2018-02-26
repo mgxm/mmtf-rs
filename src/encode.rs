@@ -1,12 +1,19 @@
 use std::convert::From;
 
 #[derive(Debug)]
+/// Map msgpack object into the given targets.
 pub enum StrategyDataTypes {
+    /// strategies: 1, 9, 10, 11, 12, 13
     VecFloat32(Vec<f32>),
+    /// strategies: 2
     VecInt8(Vec<i8>),
+    /// strategies: 3
     VecInt16(Vec<i16>),
+    /// strategies: 4, 7, 8, 14, 15
     VecInt32(Vec<i32>),
+    /// strategies: 5
     VecString(Vec<String>),
+    /// strategies: 6
     VecChar(Vec<char>),
 }
 

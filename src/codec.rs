@@ -22,15 +22,18 @@ use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
 /// let decoded = DeltaRunlength::decode(&encoded);
 /// assert_eq!(decoded, data);
 /// ```
+#[derive(Debug)]
 pub struct DeltaRunlength;
 
 impl DeltaRunlength {
+    /// Decode given bytes
     pub fn decode(bytes: &[u8]) -> Vec<i32> {
         let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
         let runlen = RunLength::decode(&asi32);
         Delta::decode(&runlen)
     }
 
+    /// Encode any array of 'T' where `T ` can be any Integer.
     pub fn encode<T>(value: &[T]) -> Vec<u8>
     where
         T: Integer + NumCast + PrimInt + ToPrimitive,
@@ -61,15 +64,18 @@ impl DeltaRunlength {
 /// let decoded = IntegerRunLength::decode(&encoded, 100);
 /// assert_eq!(decoded, data);
 /// ```
+#[derive(Debug)]
 pub struct IntegerRunLength;
 
 impl IntegerRunLength {
+    /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
         let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
         let runlen = RunLength::decode(&asi32);
         IntegerEncoding::decode(&runlen, factor)
     }
 
+    /// Encode any array of 'T' where `T ` can be any Float.
     pub fn encode<T>(value: &[T], factor: i32) -> Vec<u8>
     where
         T: Float + NumCast,
@@ -100,9 +106,11 @@ impl IntegerRunLength {
 /// let decoded = IntegerDeltaRecursive::decode(&encoded, 100);
 /// assert_eq!(decoded, data);
 /// ```
+#[derive(Debug)]
 pub struct IntegerDeltaRecursive;
 
 impl IntegerDeltaRecursive {
+    /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
         let asi16: Vec<i16> = binary_decoder::Interpret::from(bytes);
         let recursive = RecursiveIndexing::decode(&asi16);
@@ -110,6 +118,7 @@ impl IntegerDeltaRecursive {
         IntegerEncoding::decode(&delta, factor)
     }
 
+    /// Encode any array of 'T' where `T ` can be any Float.
     pub fn encode<T>(value: &[T], factor: i32) -> Vec<u8>
     where
         T: Float + NumCast,

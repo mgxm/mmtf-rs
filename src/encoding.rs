@@ -23,12 +23,14 @@ use num_traits::{Float, NumCast, PrimInt};
 /// let decoded = RunLength::decode(&encoded);
 /// assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
 /// ```
+#[derive(Debug)]
 pub struct RunLength;
 
 impl RunLength {
     /// Decode and return the decoded data
     // TODO: verify if 'AsPrimitive<T>' is the better and
     // the correct way to handle generics over primitives types.
+    /// Decode given bytes
     pub fn decode<T>(bytes: &[T]) -> Vec<i32>
     where
         T: num_integer::Integer + NumCast + PrimInt,
@@ -47,7 +49,7 @@ impl RunLength {
         res
     }
 
-    /// Encode and return the encoded data
+    /// Encode any array of 'T' where `T ` can be any Integer.
     pub fn encode<T>(values: &[T]) -> Vec<i32>
     where
         T: num_integer::Integer + NumCast + PrimInt,
@@ -84,10 +86,11 @@ impl RunLength {
 /// let decoded = Delta::decode(&encoded);
 /// assert_eq!(expected, decoded);
 /// ```
+#[derive(Debug)]
 pub struct Delta;
 
 impl Delta {
-    /// Decode and return the decoded data
+    /// Decode given bytes
     pub fn decode(bytes: &[i32]) -> Vec<i32> {
         let mut buffer = Vec::with_capacity(bytes.len() as usize);
 
@@ -101,7 +104,7 @@ impl Delta {
         buffer
     }
 
-    /// Encode `bytes`
+    /// Encode any array of 'T' where `T ` can be any Integer.
     pub fn encode<T>(bytes: &[T]) -> Vec<i32>
     where
         T: num_integer::Integer + NumCast + PrimInt,
@@ -139,6 +142,7 @@ impl Delta {
 /// let decoded = IntegerEncoding::decode(&encoded, 100);
 /// assert_eq!(decoded, data);
 /// ```
+#[derive(Debug)]
 pub struct IntegerEncoding;
 
 impl IntegerEncoding {
@@ -157,7 +161,7 @@ impl IntegerEncoding {
         result
     }
 
-    /// Encode `values` with an desired `factor`
+    /// Encode any array of 'T' where `T ` can be any Integer with an desired `factor`
     pub fn encode<T>(values: &[T], factor: i32) -> Vec<i32>
     where
         T: Float,
@@ -202,6 +206,7 @@ impl IntegerEncoding {
 /// let decoded = RecursiveIndexing::decode(&encoded);
 /// assert_eq!(decoded, data);
 /// ```
+#[derive(Debug)]
 pub struct RecursiveIndexing;
 
 impl RecursiveIndexing {
@@ -224,6 +229,7 @@ impl RecursiveIndexing {
         output
     }
 
+    /// Encode bytes
     pub fn encode(bytes: &[i32]) -> Vec<i16> {
         let mut output: Vec<i16> = Vec::new();
 
