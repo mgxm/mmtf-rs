@@ -1,7 +1,5 @@
 use num_integer::Integer;
-use num_traits::{AsPrimitive, Float, NumCast, PrimInt, ToPrimitive};
-use std::fmt::Debug;
-
+use num_traits::{Float, NumCast, PrimInt, ToPrimitive};
 use binary_decoder::Interpret;
 use binary_decoder;
 use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
@@ -30,16 +28,14 @@ impl DeltaRunlength {
     pub fn decode(bytes: &[u8]) -> Vec<i32> {
         let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
         let runlen = RunLength::decode(&asi32);
-        let delta = Delta::decode(&runlen);
-
-        delta
+        Delta::decode(&runlen)
     }
 
     pub fn encode<T>(value: &[T]) -> Vec<u8>
     where
         T: Integer + NumCast + PrimInt + ToPrimitive,
     {
-        let delta = Delta::encode(&value);
+        let delta = Delta::encode(value);
         let runlen = RunLength::encode(&delta);
         let result: Vec<u8> = Interpret::from(&runlen[..]);
         result
@@ -71,15 +67,14 @@ impl IntegerRunLength {
     pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
         let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
         let runlen = RunLength::decode(&asi32);
-        let integer = IntegerEncoding::decode(&runlen, factor);
-        integer
+        IntegerEncoding::decode(&runlen, factor)
     }
 
     pub fn encode<T>(value: &[T], factor: i32) -> Vec<u8>
     where
         T: Float + NumCast,
     {
-        let integer = IntegerEncoding::encode(&value, factor);
+        let integer = IntegerEncoding::encode(value, factor);
         let runlen = RunLength::encode(&integer);
         let result: Vec<u8> = Interpret::from(&runlen[..]);
         result
@@ -112,15 +107,14 @@ impl IntegerDeltaRecursive {
         let asi16: Vec<i16> = binary_decoder::Interpret::from(bytes);
         let recursive = RecursiveIndexing::decode(&asi16);
         let delta = Delta::decode(&recursive);
-        let integer = IntegerEncoding::decode(&delta, factor);
-        integer
+        IntegerEncoding::decode(&delta, factor)
     }
 
     pub fn encode<T>(value: &[T], factor: i32) -> Vec<u8>
     where
         T: Float + NumCast,
     {
-        let integer = IntegerEncoding::encode(&value, factor);
+        let integer = IntegerEncoding::encode(value, factor);
         let delta = Delta::encode(&integer);
         let recursive = RecursiveIndexing::encode(&delta);
         let result: Vec<u8> = Interpret::from(&recursive[..]);
@@ -139,7 +133,7 @@ mod tests {
             0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 5, 255, 255, 255, 245, 0, 0, 0, 1,
         ];
         let expected = vec![0, 1, 2, 3, 5, 5, 6, 7, 8, 9, 10, -1];
-        let mut actual = DeltaRunlength::decode(&data);
+        let actual = DeltaRunlength::decode(&data);
         assert_eq!(expected, actual);
     }
 
@@ -150,7 +144,7 @@ mod tests {
             0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0,
             0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 5, 255, 255, 255, 245, 0, 0, 0, 1,
         ];
-        let mut actual = DeltaRunlength::encode(&data);
+        let actual = DeltaRunlength::encode(&data);
         assert_eq!(expected, actual);
     }
 
@@ -158,7 +152,7 @@ mod tests {
     fn it_decode_integer_delta_run_length() {
         let data = [0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2];
         let expected = vec![1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
-        let mut actual = IntegerRunLength::decode(&data, 100);
+        let actual = IntegerRunLength::decode(&data, 100);
         assert_eq!(expected, actual);
     }
 
@@ -166,7 +160,7 @@ mod tests {
     fn it_encode_integer_delta_run_length() {
         let data = [1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
         let expected = vec![0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2];
-        let mut actual = IntegerRunLength::encode(&data, 100);
+        let actual = IntegerRunLength::encode(&data, 100);
         assert_eq!(expected, actual);
     }
 
@@ -174,7 +168,7 @@ mod tests {
     fn it_decode_integer_delta_recursive() {
         let data = [71, 24, 0, 0, 0, 2, 255, 255, 0, 100, 255, 253, 0, 5];
         let expected = vec![182.00, 182.00, 182.02, 182.01, 183.01, 182.98, 183.03];
-        let mut actual = IntegerDeltaRecursive::decode(&data, 100);
+        let actual = IntegerDeltaRecursive::decode(&data, 100);
         assert_eq!(expected, actual);
     }
 
@@ -182,7 +176,7 @@ mod tests {
     fn it_encode_integer_delta_recursive() {
         let data = [182.00, 182.00, 182.02, 182.01, 183.01, 182.98, 183.03];
         let expected = vec![71, 24, 0, 0, 0, 2, 255, 255, 0, 100, 255, 253, 0, 5];
-        let mut actual = IntegerDeltaRecursive::encode(&data, 100);
+        let actual = IntegerDeltaRecursive::encode(&data, 100);
         assert_eq!(expected, actual);
     }
 }

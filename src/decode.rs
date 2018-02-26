@@ -1,12 +1,10 @@
-use std::iter;
-use std::io::Cursor;
-use std::io::Read;
+use std::io::{Cursor, Error, Read};
 use byteorder::{BigEndian, ReadBytesExt};
-use serde::de::{self, Deserialize, Deserializer, SeqAccess, Visitor};
+use serde::de::Deserializer;
 use serde_bytes;
 
 use super::encode::{Strategy, StrategyDataTypes};
-use super::encoding::{Delta, IntegerEncoding, RunLength};
+use super::encoding::{IntegerEncoding, RunLength};
 use super::codec::{DeltaRunlength, IntegerDeltaRecursive, IntegerRunLength};
 use super::binary_decoder;
 
@@ -51,9 +49,9 @@ impl<'a> Decoder<'a> {
         Decoder { reader }
     }
 
-    fn read_field(&mut self) -> Result<Vec<u8>, &'static str> {
+    fn read_field(&mut self) -> Result<Vec<u8>, Error> {
         let mut buffer: Vec<u8> = Vec::new();
-        self.reader.read_to_end(&mut buffer);
+        try!(self.reader.read_to_end(&mut buffer));
         Ok(buffer)
     }
 }
@@ -156,7 +154,7 @@ mod tests {
 
     #[test]
     fn it_parse_header_fail() {
-        let mut data = vec![0, 0, 0, 4, 0, 0, 0, 52, 0, 0, 0];
+        let data = vec![0, 0, 0, 4, 0, 0, 0, 52, 0, 0, 0];
         let mut decoder = Decoder::new(&data);
         let header = Header::read_info(&mut decoder);
         assert_eq!(

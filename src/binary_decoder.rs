@@ -1,6 +1,6 @@
 use std::char::from_u32;
 use std::str;
-use byteorder::{BigEndian, ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::Cursor;
 
 pub trait Interpret<T> {
@@ -66,10 +66,9 @@ impl<'a> Interpret<&'a [u8]> for Vec<String> {
         assert!(length % 4 == 0);
 
         let mut buffer: Vec<String> = Vec::with_capacity(length / 4);
-        let mut rdr = Cursor::new(values);
 
         for c in values.chunks(4) {
-            let out = str::from_utf8(&c).unwrap();
+            let out = str::from_utf8(c).unwrap();
             buffer.push(out.trim_matches('\u{0}').to_string());
         }
 
@@ -135,7 +134,7 @@ impl<'a> Interpret<&'a [u8]> for Vec<i16> {
 
         let mut bytes = Cursor::new(values);
         let mut buffer = Vec::with_capacity(length);
-        for b in 0..length / 2 {
+        for _ in 0..length / 2 {
             let r = bytes.read_i16::<BigEndian>().unwrap();
             buffer.push(r);
         }

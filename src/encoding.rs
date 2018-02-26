@@ -101,6 +101,7 @@ impl Delta {
         buffer
     }
 
+    /// Encode `bytes`
     pub fn encode<T>(bytes: &[T]) -> Vec<i32>
     where
         T: num_integer::Integer + NumCast + PrimInt,
@@ -109,7 +110,7 @@ impl Delta {
 
         let mut position = NumCast::from(bytes[0]).unwrap();
         buffer.push(position);
-        for (index, value) in bytes.iter().skip(1).enumerate() {
+        for (_, value) in bytes.iter().skip(1).enumerate() {
             let value: i32 = NumCast::from(*value).unwrap();
             buffer.push(value - position);
             position = value;
@@ -211,9 +212,11 @@ impl RecursiveIndexing {
 
         for item in bytes {
             if *item == i16::MAX || *item == i16::MIN {
-                out_len += *item as i32;
+                let item: i32 = NumCast::from(*item).unwrap();
+                out_len += item;
             } else {
-                out_len += *item as i32;
+                let item: i32 = NumCast::from(*item).unwrap();
+                out_len += item;
                 output.push(out_len);
                 out_len = 0;
             }
@@ -223,20 +226,24 @@ impl RecursiveIndexing {
 
     pub fn encode(bytes: &[i32]) -> Vec<i16> {
         let mut output: Vec<i16> = Vec::new();
+
+        let max: i32 = NumCast::from(i16::MAX).unwrap();
+        let min: i32 = NumCast::from(i16::MIN).unwrap();
+
         for num in bytes {
             let mut num = *num;
             if num >= 0 {
-                while num >= i16::MAX as i32 {
-                    output.push(i16::MAX);
-                    num -= i16::MAX as i32;
+                while num >= max {
+                    output.push(NumCast::from(max).unwrap());
+                    num -= max;
                 }
             } else {
-                while num <= i16::MIN as i32 {
-                    output.push(i16::MIN);
-                    num += (i16::MIN as i32).abs();
+                while num <= min {
+                    output.push(NumCast::from(min).unwrap());
+                    num += min.abs();
                 }
             }
-            output.push(num as i16);
+            output.push(NumCast::from(num).unwrap());
         }
         output
     }
@@ -252,7 +259,6 @@ mod tests {
         let decoded = RunLength::decode(&encoded);
         assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
 
-        let encode = [1_i16, 4, 2, 1, 1, 4];
         let decoded = RunLength::decode(&encoded);
         assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
     }

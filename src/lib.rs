@@ -2,13 +2,13 @@
 //!
 //! > The macromolecular transmission format (MMTF) is a binary encoding of biological structures.
 //! > It includes the coordinates, the topology and associated data. Specifically, a large subset of
-//! > the data in mmCIF or PDB files can be represented. Pronounced goals are a reduced file size for
+//! > the data in `mmCIF` or `PDB` files can be represented. Pronounced goals are a reduced file size for
 //! > efficient transmission over the Internet or from hard disk to memory and fast decoding/parsing speed.
 //! > Additionally the format aims to be easy to understand and implement to facilitates its dissemination.
 //!
 //! For a more detailed information and specifications, please, take a look at their official [documentation](https://mmtf.rcsb.org/).
 //!
-//! This crate use the deserialize and serialize from Rust MessagePack and their integration with Serde,
+//! This crate use the deserialize and serialize from Rust `MessagePack` and their integration with Serde,
 //! providing a simple and easily decoder and decoder for MMTF structures
 //!
 //! # Examples

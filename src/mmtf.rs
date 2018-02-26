@@ -1,7 +1,7 @@
 use super::decode;
 
-use serde::{Deserialize, Serialize};
-use rmps::{Deserializer, Serializer};
+use serde::Deserialize;
+use rmps::Deserializer;
 use std::fs::File;
 
 /// Transform List
@@ -61,7 +61,7 @@ pub struct Entity {
 /// Group data
 ///
 /// The fields in the following sections hold group-related data.
-/// The mmCIF format allows for so-called micro-heterogeneity on
+/// The `mmCIF` format allows for so-called micro-heterogeneity on
 /// the group-level. For groups (residues) with micro-heterogeneity
 /// there are two or more entries given that have the same sequence
 /// index, group id (and insertion code) but are of a different group
