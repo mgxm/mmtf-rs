@@ -2,6 +2,7 @@
 name = "mmtf"
 version = "0.1.0"
 authors = ["mgxm"]
+license = "Apache-2.0"
 
 [dependencies]
 serde = "1.0"
