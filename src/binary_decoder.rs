@@ -2,7 +2,6 @@ use std::char::from_u32;
 use std::str;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::Cursor;
-use num_traits::{NumCast, PrimInt};
 
 pub trait Interpret<T> {
     fn from(T) -> Self;

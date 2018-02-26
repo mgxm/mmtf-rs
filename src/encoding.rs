@@ -2,7 +2,7 @@ use std::iter;
 use std::i16;
 use itertools::Itertools;
 use num_integer;
-use num_traits::{AsPrimitive, Float, NumCast, PrimInt, ToPrimitive};
+use num_traits::{Float, NumCast, PrimInt};
 
 /// Run-length encoding.
 ///
