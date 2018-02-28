@@ -2,6 +2,7 @@ use super::decode;
 
 use serde::Deserialize;
 use rmps::Deserializer;
+use rmps::decode::Error;
 use std::fs::File;
 
 /// Transform List
@@ -324,11 +325,17 @@ impl Mmtf {
     /// #                                    .join("173D.mmtf");
     /// # let display = file_path.display();
     /// let mmtf_file = File::open(&file_path).unwrap();
-    /// let mmtf = Mmtf::from_file(&mmtf_file);
+    /// let mmtf = Mmtf::from_file(&mmtf_file).unwrap();
     ///
     /// assert_eq!("1.0.0", mmtf.mmtf_version);
     /// ```
-    pub fn from_file(file: &File) -> Self {
+    pub fn from_file(file: &File) -> Result<Self, Error> {
+        let mut de = Deserializer::new(file);
+        let mmtf: Mmtf = try!(Deserialize::deserialize(&mut de));
+        Ok(mmtf)
+    }
+
+    pub fn from_slice(file: &[u8]) -> Self {
         let mut de = Deserializer::new(file);
         let mmtf: Mmtf = Deserialize::deserialize(&mut de).unwrap();
         mmtf

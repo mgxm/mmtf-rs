@@ -3,44 +3,15 @@ use byteorder::{BigEndian, ReadBytesExt};
 use serde::de::Deserializer;
 use serde_bytes;
 
-use super::encode::{Strategy, StrategyDataTypes};
+use super::encode::{EncodeError, Header, HeaderLayout, Strategy, StrategyDataTypes};
 use super::encoding::{IntegerEncoding, RunLength};
 use super::codec::{DeltaRunlength, IntegerDeltaRecursive, IntegerRunLength};
 use super::binary_decoder;
 
-trait Decode {
-    fn decode(&mut self);
-}
-
-struct Decoder<'a> {
-    reader: Cursor<&'a [u8]>,
-}
 
 #[derive(Debug)]
-struct Header {
-    codec: i32,
-    length: i32,
-    parameter: i32,
-}
-
-impl Header {
-    fn read_info(decoder: &mut Decoder) -> Result<Self, &'static str> {
-        // Will return an error if the position is not at the Start
-        // and the number of the bytes is less than 12.
-        if decoder.reader.position() > 0 || decoder.reader.get_ref().len() < 12 {
-            Err("The reader dont contain the minimum number of bytes (12) to parse the Header")
-        } else {
-            let codec = decoder.reader.read_i32::<BigEndian>().unwrap();
-            let length = decoder.reader.read_i32::<BigEndian>().unwrap();
-            let parameter = decoder.reader.read_i32::<BigEndian>().unwrap();
-
-            Ok(Header {
-                codec,
-                length,
-                parameter,
-            })
-        }
-    }
+struct Decoder<'a> {
+    reader: Cursor<&'a [u8]>,
 }
 
 impl<'a> Decoder<'a> {
@@ -56,9 +27,29 @@ impl<'a> Decoder<'a> {
     }
 }
 
+impl<'a> Header for Decoder<'a> {
+    fn header(&mut self) -> Result<HeaderLayout, EncodeError> {
+        // Will return an error if the position is not at the Start
+        // and the number of the bytes is less than 12.
+        if self.reader.position() > 0 || self.reader.get_ref().len() < 12 {
+            return Err(EncodeError::Header);
+        } else {
+            let codec = self.reader.read_i32::<BigEndian>().unwrap();
+            let length = self.reader.read_i32::<BigEndian>().unwrap();
+            let parameter = self.reader.read_i32::<BigEndian>().unwrap();
+
+            Ok(HeaderLayout {
+                codec,
+                length,
+                parameter,
+            })
+        }
+    }
+}
+
 impl<'a> Strategy for Decoder<'a> {
-    fn apply(&mut self) -> Result<StrategyDataTypes, &'static str> {
-        let header = Header::read_info(self).unwrap();
+    fn apply(&mut self) -> Result<StrategyDataTypes, EncodeError> {
+        let header = try!(self.header());
         let field = self.read_field().unwrap();
 
         match header.codec {
@@ -111,7 +102,7 @@ impl<'a> Strategy for Decoder<'a> {
             13 => unimplemented!(),
             14 => unimplemented!(),
             15 => unimplemented!(),
-            _ => Err("nothing here"),
+            _ => Err(EncodeError::Codec),
         }
     }
 }
@@ -145,7 +136,7 @@ mod tests {
     fn it_parse_header_success() {
         let data = vec![0, 0, 0, 4, 0, 0, 0, 52, 0, 0, 0, 0];
         let mut decoder = Decoder::new(&data);
-        let header = Header::read_info(&mut decoder).unwrap();
+        let header = decoder.header().unwrap();
 
         assert_eq!(4, header.codec);
         assert_eq!(52, header.length);
@@ -156,11 +147,8 @@ mod tests {
     fn it_parse_header_fail() {
         let data = vec![0, 0, 0, 4, 0, 0, 0, 52, 0, 0, 0];
         let mut decoder = Decoder::new(&data);
-        let header = Header::read_info(&mut decoder);
-        assert_eq!(
-            header.unwrap_err(),
-            "The reader dont contain the minimum number of bytes (12) to parse the Header"
-        );
+        let header = decoder.header();
+        assert_eq!(header.unwrap_err(), EncodeError::Header);
     }
 
     #[test]
@@ -170,7 +158,7 @@ mod tests {
         ];
         let expected = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
         let mut decoder = Decoder::new(&data);
-        Header::read_info(&mut decoder).unwrap();
+        decoder.header();
 
         let actual = decoder.read_field().unwrap();
         assert_eq!(expected, actual);

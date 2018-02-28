@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::fmt;
 
 #[derive(Debug)]
 /// Map msgpack object into the given targets.
@@ -15,6 +16,38 @@ pub enum StrategyDataTypes {
     VecString(Vec<String>),
     /// strategies: 6
     VecChar(Vec<char>),
+}
+
+pub trait Strategy {
+    fn apply(&mut self) -> Result<StrategyDataTypes, EncodeError>;
+}
+
+#[derive(Debug)]
+pub struct HeaderLayout {
+    pub codec: i32,
+    pub length: i32,
+    pub parameter: i32,
+}
+
+pub trait Header {
+    fn header(&mut self) -> Result<HeaderLayout, EncodeError>;
+}
+
+#[derive(Debug, PartialEq)]
+pub enum EncodeError {
+    Codec,
+    Header,
+    Field,
+}
+
+impl fmt::Display for EncodeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            EncodeError::Codec => write!(f, "Codec type doesn't exists"),
+            EncodeError::Header => write!(f, "Failed to parse Header"),
+            EncodeError::Field => write!(f, "Failed to parse Fields"),
+        }
+    }
 }
 
 impl From<StrategyDataTypes> for Option<Vec<i8>> {
@@ -99,10 +132,6 @@ impl From<StrategyDataTypes> for Vec<i8> {
             _ => unreachable!(),
         }
     }
-}
-
-pub trait Strategy {
-    fn apply(&mut self) -> Result<StrategyDataTypes, &'static str>;
 }
 
 #[cfg(test)]
