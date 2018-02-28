@@ -245,12 +245,10 @@ mod tests {
         };
     }
 
+    #[test]
     fn test_apply_strategy_for_type_6() {
-        let data = [
-            0, 0, 0, 6, 0, 0, 0, 8, 0, 0, 0, 4, 65, 0, 0, 0, 66, 0, 0, 0, 67, 0, 0, 0, 68, 0, 0, 0,
-            69, 0, 0, 0, 70, 0, 0, 0, 71, 0, 0, 0, 72, 0, 0, 0,
-        ];
-        let expected = vec!['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        let data = [0, 0, 0, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 3];
+        let expected = vec!['A', 'A', 'A'];
         let mut decoder = Decoder::new(&data);
         if let StrategyDataTypes::VecChar(actual) = decoder.apply().unwrap() {
             assert_eq!(expected, actual);
