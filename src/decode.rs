@@ -20,7 +20,9 @@ impl<'a> Decoder<'a> {
         Decoder { reader }
     }
 
-    fn read_field(&mut self) -> Result<Vec<u8>, Error> {
+    fn field(&mut self) -> Result<Vec<u8>, Error> {
+        // Skip header bytes
+        self.reader.set_position(12);
         let mut buffer: Vec<u8> = Vec::new();
         try!(self.reader.read_to_end(&mut buffer));
         Ok(buffer)
@@ -29,10 +31,14 @@ impl<'a> Decoder<'a> {
 
 impl<'a> Header for Decoder<'a> {
     fn header(&mut self) -> Result<HeaderLayout, EncodeError> {
+        self.reader.set_position(0);
+
         // Will return an error if the position is not at the Start
         // and the number of the bytes is less than 12.
-        if self.reader.position() > 0 || self.reader.get_ref().len() < 12 {
-            return Err(EncodeError::Header);
+        let header_len = self.reader.get_ref().len();
+        if header_len < 12 {
+            let err = format!("bytes length should be more than {}", header_len);
+            return Err(EncodeError::Header(err));
         } else {
             let codec = self.reader.read_i32::<BigEndian>().unwrap();
             let length = self.reader.read_i32::<BigEndian>().unwrap();
@@ -50,7 +56,7 @@ impl<'a> Header for Decoder<'a> {
 impl<'a> Strategy for Decoder<'a> {
     fn apply(&mut self) -> Result<StrategyDataTypes, EncodeError> {
         let header = try!(self.header());
-        let field = self.read_field().unwrap();
+        let field = self.field().unwrap();
 
         match header.codec {
             1 => {
@@ -148,7 +154,12 @@ mod tests {
         let data = vec![0, 0, 0, 4, 0, 0, 0, 52, 0, 0, 0];
         let mut decoder = Decoder::new(&data);
         let header = decoder.header();
-        assert_eq!(header.unwrap_err(), EncodeError::Header);
+
+        if let EncodeError::Header(err) = header.unwrap_err() {
+            assert_eq!(err, "bytes length should be more than 11");
+        } else {
+            panic!();
+        }
     }
 
     #[test]
@@ -160,7 +171,7 @@ mod tests {
         let mut decoder = Decoder::new(&data);
         decoder.header();
 
-        let actual = decoder.read_field().unwrap();
+        let actual = decoder.field().unwrap();
         assert_eq!(expected, actual);
     }
 

@@ -36,7 +36,7 @@ pub trait Header {
 #[derive(Debug, PartialEq)]
 pub enum EncodeError {
     Codec,
-    Header,
+    Header(String),
     Field,
 }
 
@@ -44,7 +44,7 @@ impl fmt::Display for EncodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             EncodeError::Codec => write!(f, "Codec type doesn't exists"),
-            EncodeError::Header => write!(f, "Failed to parse Header"),
+            EncodeError::Header(ref err) => write!(f, "Failed to parse Header: `{}`", err),
             EncodeError::Field => write!(f, "Failed to parse Fields"),
         }
     }
