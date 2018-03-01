@@ -6,6 +6,7 @@ license = "Apache-2.0"
 description = "Macromolecular transmission format (MMTF) decoder and encoder"
 keywords = ["mmtf", "macromolecular", "bio"]
 categories = ["encoding", "science"]
+readme = "README.md"
 
 [dependencies]
 serde = "1.0"
