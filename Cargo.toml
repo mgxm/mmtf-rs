@@ -1,8 +1,11 @@
 [package]
 name = "mmtf"
 version = "0.1.0"
-authors = ["mgxm"]
+authors = ["mgxm <i@mgxm.me>"]
 license = "Apache-2.0"
+description = "Macromolecular transmission format (MMTF) decoder and encoder"
+keywords = ["mmtf", "macromolecular", "bio"]
+categories = ["encoding", "science"]
 
 [dependencies]
 serde = "1.0"
