@@ -3,6 +3,7 @@ use num_traits::{Float, NumCast, PrimInt, ToPrimitive};
 use binary_decoder::Interpret;
 use binary_decoder;
 use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
+use encode::EncodeError;
 
 /// Delta & Runlength
 ///
@@ -19,7 +20,7 @@ use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
 /// let encoded = DeltaRunlength::encode(&data);
 /// assert_eq!(encoded, vec![0, 0, 0, 1, 0, 0, 0, 4]);
 ///
-/// let decoded = DeltaRunlength::decode(&encoded);
+/// let decoded = DeltaRunlength::decode(&encoded).unwrap();
 /// assert_eq!(decoded, data);
 /// ```
 #[derive(Debug)]
@@ -27,10 +28,10 @@ pub struct DeltaRunlength;
 
 impl DeltaRunlength {
     /// Decode given bytes
-    pub fn decode(bytes: &[u8]) -> Vec<i32> {
+    pub fn decode(bytes: &[u8]) -> Result<Vec<i32>, EncodeError> {
         let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
-        let runlen = RunLength::decode(&asi32);
-        Delta::decode(&runlen)
+        let runlen = try!(RunLength::decode(&asi32));
+        Ok(Delta::decode(&runlen))
     }
 
     /// Encode any array of 'T' where `T ` can be any Integer.
@@ -61,7 +62,7 @@ impl DeltaRunlength {
 /// let encoded = IntegerRunLength::encode(&data, 100);
 /// assert_eq!(encoded, vec![0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2]);
 ///
-/// let decoded = IntegerRunLength::decode(&encoded, 100);
+/// let decoded = IntegerRunLength::decode(&encoded, 100).unwrap();
 /// assert_eq!(decoded, data);
 /// ```
 #[derive(Debug)]
@@ -69,10 +70,10 @@ pub struct IntegerRunLength;
 
 impl IntegerRunLength {
     /// Decode given bytes
-    pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
+    pub fn decode(bytes: &[u8], factor: i32) -> Result<Vec<f32>, EncodeError> {
         let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
-        let runlen = RunLength::decode(&asi32);
-        IntegerEncoding::decode(&runlen, factor)
+        let runlen = try!(RunLength::decode(&asi32));
+        Ok(IntegerEncoding::decode(&runlen, factor))
     }
 
     /// Encode any array of 'T' where `T ` can be any Float.
@@ -142,7 +143,7 @@ mod tests {
             0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 5, 255, 255, 255, 245, 0, 0, 0, 1,
         ];
         let expected = vec![0, 1, 2, 3, 5, 5, 6, 7, 8, 9, 10, -1];
-        let actual = DeltaRunlength::decode(&data);
+        let actual = DeltaRunlength::decode(&data).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -161,7 +162,7 @@ mod tests {
     fn it_decode_integer_delta_run_length() {
         let data = [0, 0, 0, 100, 0, 0, 0, 4, 0, 0, 0, 50, 0, 0, 0, 2];
         let expected = vec![1.00, 1.00, 1.00, 1.00, 0.50, 0.50];
-        let actual = IntegerRunLength::decode(&data, 100);
+        let actual = IntegerRunLength::decode(&data, 100).unwrap();
         assert_eq!(expected, actual);
     }
 

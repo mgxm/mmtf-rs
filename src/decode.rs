@@ -78,21 +78,21 @@ impl<'a> Strategy for Decoder<'a> {
             }
             6 => {
                 let asi32: Vec<i32> = binary_decoder::Interpret::from(&field[..]);
-                let run = RunLength::decode(&asi32);
+                let run = try!(RunLength::decode(&asi32));
                 let result: Vec<char> = binary_decoder::Interpret::from(&run[..]);
                 Ok(StrategyDataTypes::VecChar(result))
             }
             7 => {
                 let bytes: Vec<i32> = binary_decoder::Interpret::from(&field[..]);
-                let result = RunLength::decode(&bytes);
+                let result = try!(RunLength::decode(&bytes));
                 Ok(StrategyDataTypes::VecInt32(result))
             }
             8 => {
-                let result = DeltaRunlength::decode(&field);
+                let result = try!(DeltaRunlength::decode(&field));
                 Ok(StrategyDataTypes::VecInt32(result))
             }
             9 => {
-                let result = IntegerRunLength::decode(&field, header.parameter);
+                let result = try!(IntegerRunLength::decode(&field, header.parameter));
                 Ok(StrategyDataTypes::VecFloat32(result))
             }
             10 => {

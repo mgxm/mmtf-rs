@@ -38,6 +38,7 @@ pub enum EncodeError {
     Codec,
     Header(String),
     Field,
+    Encoding(String)
 }
 
 impl fmt::Display for EncodeError {
@@ -46,6 +47,7 @@ impl fmt::Display for EncodeError {
             EncodeError::Codec => write!(f, "Codec type doesn't exists"),
             EncodeError::Header(ref err) => write!(f, "Failed to parse Header: `{}`", err),
             EncodeError::Field => write!(f, "Failed to parse Fields"),
+            EncodeError::Encoding(ref err) => write!(f, "encoding error: `{}`", err),
         }
     }
 }

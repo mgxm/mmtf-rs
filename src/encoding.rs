@@ -3,6 +3,7 @@ use std::i16;
 use itertools::Itertools;
 use num_integer;
 use num_traits::{Float, NumCast, PrimInt};
+use encode::EncodeError;
 
 /// Run-length encoding.
 ///
@@ -20,7 +21,7 @@ use num_traits::{Float, NumCast, PrimInt};
 /// let encoded = RunLength::encode(&data);
 /// assert_eq!(vec![1, 4, 2, 1, 1, 4], encoded);
 ///
-/// let decoded = RunLength::decode(&encoded);
+/// let decoded = RunLength::decode(&encoded).unwrap();
 /// assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
 /// ```
 #[derive(Debug)]
@@ -30,14 +31,18 @@ impl RunLength {
     /// Decode and return the decoded data
     // TODO: verify if 'AsPrimitive<T>' is the better and
     // the correct way to handle generics over primitives types.
-    /// Decode given bytes
-    pub fn decode<T>(bytes: &[T]) -> Vec<i32>
+    /// Decode given values
+    pub fn decode<T>(values: &[T]) -> Result<Vec<i32>, EncodeError>
     where
         T: num_integer::Integer + NumCast + PrimInt,
     {
         let mut res: Vec<i32> = Vec::new();
 
-        for v in bytes.chunks(2) {
+        if !values.len() % 2 == 0 {
+            return Err(EncodeError::Encoding("Run Length error".to_string()))
+        }
+
+        for v in values.chunks(2) {
             let value = &v[0];
             let repeat = &v[1];
             let chunks: usize = NumCast::from(*repeat).unwrap();
@@ -46,7 +51,7 @@ impl RunLength {
                 res.push(value);
             }
         }
-        res
+        Ok(res)
     }
 
     /// Encode any array of 'T' where `T ` can be any Integer.
@@ -262,10 +267,10 @@ mod tests {
     #[test]
     fn it_decode_run_length_encoding() {
         let encoded = [1, 4, 2, 1, 1, 4];
-        let decoded = RunLength::decode(&encoded);
+        let decoded = RunLength::decode(&encoded).unwrap();
         assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
 
-        let decoded = RunLength::decode(&encoded);
+        let decoded = RunLength::decode(&encoded).unwrap();
         assert_eq!(vec![1, 1, 1, 1, 2, 1, 1, 1, 1], decoded);
     }
 
