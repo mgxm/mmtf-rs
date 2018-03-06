@@ -1,5 +1,6 @@
 use std::convert::From;
 use std::fmt;
+use std::io;
 
 #[derive(Debug)]
 /// Map msgpack object into the given targets.
@@ -33,12 +34,13 @@ pub trait Header {
     fn header(&mut self) -> Result<HeaderLayout, EncodeError>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum EncodeError {
     Codec,
     Header(String),
     Field,
-    Encoding(String)
+    Encoding(String),
+    IO(io::Error)
 }
 
 impl fmt::Display for EncodeError {
@@ -48,7 +50,14 @@ impl fmt::Display for EncodeError {
             EncodeError::Header(ref err) => write!(f, "Failed to parse Header: `{}`", err),
             EncodeError::Field => write!(f, "Failed to parse Fields"),
             EncodeError::Encoding(ref err) => write!(f, "encoding error: `{}`", err),
+            EncodeError::IO(ref err) => write!(f, "{}", err),
         }
+    }
+}
+
+impl From<io::Error> for EncodeError {
+    fn from(error: io::Error) -> Self {
+        EncodeError::IO(error)
     }
 }
 

@@ -88,7 +88,7 @@ impl RunLength {
 /// let encoded =      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 5];
 /// let expected = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 20];
 ///
-/// let decoded = Delta::decode(&encoded);
+/// let decoded = Delta::decode(&encoded).unwrap();
 /// assert_eq!(expected, decoded);
 /// ```
 #[derive(Debug)]
@@ -96,7 +96,7 @@ pub struct Delta;
 
 impl Delta {
     /// Decode given bytes
-    pub fn decode(bytes: &[i32]) -> Vec<i32> {
+    pub fn decode(bytes: &[i32]) -> Result<Vec<i32>, EncodeError> {
         let mut buffer = Vec::with_capacity(bytes.len() as usize);
 
         // The first entry in the array is left as is
@@ -106,7 +106,7 @@ impl Delta {
             let position = buffer[index];
             buffer.push(position + value)
         }
-        buffer
+        Ok(buffer)
     }
 
     /// Encode any array of 'T' where `T ` can be any Integer.
@@ -285,7 +285,7 @@ mod tests {
     fn it_decode_delta_encoding() {
         let data = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 5];
         let expected = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 20];
-        let actual = Delta::decode(&data);
+        let actual = Delta::decode(&data).unwrap();
         assert_eq!(expected, actual);
     }
 

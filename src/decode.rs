@@ -60,30 +60,30 @@ impl<'a> Strategy for Decoder<'a> {
 
         match header.codec {
             1 => {
-                let decoded: Vec<f32> = binary_decoder::Interpret::from(&field[..]);
+                let decoded: Vec<f32> = try!(binary_decoder::Interpret::from(&field[..]));
                 Ok(StrategyDataTypes::VecFloat32(decoded))
             }
             2 => Ok(StrategyDataTypes::VecInt8(
-                binary_decoder::Interpret::from(&field[..]),
+                try!(binary_decoder::Interpret::from(&field[..])),
             )),
             3 => Ok(StrategyDataTypes::VecInt16(
-                binary_decoder::Interpret::from(&field[..]),
+                try!(binary_decoder::Interpret::from(&field[..])),
             )),
             4 => Ok(StrategyDataTypes::VecInt32(
-                binary_decoder::Interpret::from(&field[..]),
+                try!(binary_decoder::Interpret::from(&field[..])),
             )),
             5 => {
-                let result: Vec<String> = binary_decoder::Interpret::from(&field[..]);
+                let result: Vec<String> = try!(binary_decoder::Interpret::from(&field[..]));
                 Ok(StrategyDataTypes::VecString(result))
             }
             6 => {
-                let asi32: Vec<i32> = binary_decoder::Interpret::from(&field[..]);
+                let asi32: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
                 let run = try!(RunLength::decode(&asi32));
-                let result: Vec<char> = binary_decoder::Interpret::from(&run[..]);
+                let result: Vec<char> = try!(binary_decoder::Interpret::from(&run[..]));
                 Ok(StrategyDataTypes::VecChar(result))
             }
             7 => {
-                let bytes: Vec<i32> = binary_decoder::Interpret::from(&field[..]);
+                let bytes: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
                 let result = try!(RunLength::decode(&bytes));
                 Ok(StrategyDataTypes::VecInt32(result))
             }
@@ -100,7 +100,7 @@ impl<'a> Strategy for Decoder<'a> {
                 Ok(StrategyDataTypes::VecFloat32(result))
             }
             11 => {
-                let values: Vec<i16> = binary_decoder::Interpret::from(&field[..]);
+                let values: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
                 let result = IntegerEncoding::decode(&values, header.parameter);
                 Ok(StrategyDataTypes::VecFloat32(result))
             }

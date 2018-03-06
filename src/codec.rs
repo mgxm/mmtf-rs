@@ -29,9 +29,10 @@ pub struct DeltaRunlength;
 impl DeltaRunlength {
     /// Decode given bytes
     pub fn decode(bytes: &[u8]) -> Result<Vec<i32>, EncodeError> {
-        let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
-        let runlen = try!(RunLength::decode(&asi32));
-        Ok(Delta::decode(&runlen))
+        let data: Vec<i32> = try!(binary_decoder::Interpret::from(bytes));
+        RunLength::decode(&data)
+            .and_then(|rl: Vec<i32>| Delta::decode(&rl))
+            .and_then(|res: Vec<i32>| Ok(res))
     }
 
     /// Encode any array of 'T' where `T ` can be any Integer.
@@ -41,7 +42,7 @@ impl DeltaRunlength {
     {
         let delta = Delta::encode(value);
         let runlen = RunLength::encode(&delta);
-        let result: Vec<u8> = Interpret::from(&runlen[..]);
+        let result: Vec<u8> = Interpret::from(&runlen[..]).unwrap();
         result
     }
 }
@@ -71,7 +72,7 @@ pub struct IntegerRunLength;
 impl IntegerRunLength {
     /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Result<Vec<f32>, EncodeError> {
-        let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes);
+        let asi32: Vec<i32> = binary_decoder::Interpret::from(bytes).unwrap();
         let runlen = try!(RunLength::decode(&asi32));
         Ok(IntegerEncoding::decode(&runlen, factor))
     }
@@ -83,7 +84,7 @@ impl IntegerRunLength {
     {
         let integer = IntegerEncoding::encode(value, factor);
         let runlen = RunLength::encode(&integer);
-        let result: Vec<u8> = Interpret::from(&runlen[..]);
+        let result: Vec<u8> = Interpret::from(&runlen[..]).unwrap();
         result
     }
 }
@@ -113,9 +114,9 @@ pub struct IntegerDeltaRecursive;
 impl IntegerDeltaRecursive {
     /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Vec<f32> {
-        let asi16: Vec<i16> = binary_decoder::Interpret::from(bytes);
+        let asi16: Vec<i16> = binary_decoder::Interpret::from(bytes).unwrap();
         let recursive = RecursiveIndexing::decode(&asi16);
-        let delta = Delta::decode(&recursive);
+        let delta = Delta::decode(&recursive).unwrap();
         IntegerEncoding::decode(&delta, factor)
     }
 
@@ -127,7 +128,7 @@ impl IntegerDeltaRecursive {
         let integer = IntegerEncoding::encode(value, factor);
         let delta = Delta::encode(&integer);
         let recursive = RecursiveIndexing::encode(&delta);
-        let result: Vec<u8> = Interpret::from(&recursive[..]);
+        let result: Vec<u8> = Interpret::from(&recursive[..]).unwrap();
         result
     }
 }
