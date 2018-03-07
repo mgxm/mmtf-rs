@@ -15,7 +15,7 @@ impl<'a> Interpret<&'a [i32]> for Vec<u8> {
     fn from(values: &'a [i32]) -> Result<Vec<u8>, Error> {
         let mut wtr = vec![];
         for v in values {
-            wtr.write_i32::<BigEndian>(*v).unwrap();
+            try!(wtr.write_i32::<BigEndian>(*v));
         }
         Ok(wtr)
     }

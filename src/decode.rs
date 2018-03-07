@@ -8,7 +8,6 @@ use super::encoding::{IntegerEncoding, RunLength};
 use super::codec::{DeltaRunlength, IntegerDeltaRecursive, IntegerRunLength};
 use super::binary_decoder;
 
-
 #[derive(Debug)]
 struct Decoder<'a> {
     reader: Cursor<&'a [u8]>,
@@ -40,9 +39,9 @@ impl<'a> Header for Decoder<'a> {
             let err = format!("bytes length should be more than {}", header_len);
             return Err(EncodeError::Header(err));
         } else {
-            let codec = self.reader.read_i32::<BigEndian>().unwrap();
-            let length = self.reader.read_i32::<BigEndian>().unwrap();
-            let parameter = self.reader.read_i32::<BigEndian>().unwrap();
+            let codec = try!(self.reader.read_i32::<BigEndian>());
+            let length = try!(self.reader.read_i32::<BigEndian>());
+            let parameter = try!(self.reader.read_i32::<BigEndian>());
 
             Ok(HeaderLayout {
                 codec,
@@ -56,53 +55,48 @@ impl<'a> Header for Decoder<'a> {
 impl<'a> Strategy for Decoder<'a> {
     fn apply(&mut self) -> Result<StrategyDataTypes, EncodeError> {
         let header = try!(self.header());
-        let field = self.field().unwrap();
+        let field = try!(self.field());
 
         match header.codec {
             1 => {
                 let decoded: Vec<f32> = try!(binary_decoder::Interpret::from(&field[..]));
                 Ok(StrategyDataTypes::VecFloat32(decoded))
             }
-            2 => Ok(StrategyDataTypes::VecInt8(
-                try!(binary_decoder::Interpret::from(&field[..])),
-            )),
-            3 => Ok(StrategyDataTypes::VecInt16(
-                try!(binary_decoder::Interpret::from(&field[..])),
-            )),
-            4 => Ok(StrategyDataTypes::VecInt32(
-                try!(binary_decoder::Interpret::from(&field[..])),
-            )),
+            2 => Ok(StrategyDataTypes::VecInt8(try!(
+                binary_decoder::Interpret::from(&field[..])
+            ))),
+            3 => Ok(StrategyDataTypes::VecInt16(try!(
+                binary_decoder::Interpret::from(&field[..])
+            ))),
+            4 => Ok(StrategyDataTypes::VecInt32(try!(
+                binary_decoder::Interpret::from(&field[..])
+            ))),
             5 => {
                 let result: Vec<String> = try!(binary_decoder::Interpret::from(&field[..]));
                 Ok(StrategyDataTypes::VecString(result))
             }
             6 => {
-                let asi32: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
-                let run = try!(RunLength::decode(&asi32));
-                let result: Vec<char> = try!(binary_decoder::Interpret::from(&run[..]));
-                Ok(StrategyDataTypes::VecChar(result))
+                let data: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
+                RunLength::decode(&data)
+                    .and_then(|v| {
+                        let r: Vec<char> = try!(binary_decoder::Interpret::from(&v[..]));
+                        Ok(r)
+                    })
+                    .and_then(|v| Ok(StrategyDataTypes::VecChar(v)))
             }
             7 => {
-                let bytes: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
-                let result = try!(RunLength::decode(&bytes));
-                Ok(StrategyDataTypes::VecInt32(result))
+                let data: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
+                RunLength::decode(&data).and_then(|v| Ok(StrategyDataTypes::VecInt32(v)))
             }
-            8 => {
-                let result = try!(DeltaRunlength::decode(&field));
-                Ok(StrategyDataTypes::VecInt32(result))
-            }
-            9 => {
-                let result = try!(IntegerRunLength::decode(&field, header.parameter));
-                Ok(StrategyDataTypes::VecFloat32(result))
-            }
-            10 => {
-                let result = IntegerDeltaRecursive::decode(&field[..], header.parameter);
-                Ok(StrategyDataTypes::VecFloat32(result))
-            }
+            8 => DeltaRunlength::decode(&field).and_then(|v| Ok(StrategyDataTypes::VecInt32(v))),
+            9 => IntegerRunLength::decode(&field, header.parameter)
+                .and_then(|v| Ok(StrategyDataTypes::VecFloat32(v))),
+            10 => IntegerDeltaRecursive::decode(&field[..], header.parameter)
+                .and_then(|v| Ok(StrategyDataTypes::VecFloat32(v))),
             11 => {
-                let values: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
-                let result = IntegerEncoding::decode(&values, header.parameter);
-                Ok(StrategyDataTypes::VecFloat32(result))
+                let r: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
+                IntegerEncoding::decode(&r, header.parameter)
+                    .and_then(|v| Ok(StrategyDataTypes::VecFloat32(v)))
             }
             12 => unimplemented!(),
             13 => unimplemented!(),
