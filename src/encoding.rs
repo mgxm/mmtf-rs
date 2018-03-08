@@ -216,16 +216,22 @@ pub struct RecursiveIndexing;
 
 impl RecursiveIndexing {
     /// Decode and return the decoded data
-    pub fn decode(bytes: &[i16]) -> Result<Vec<i32>, EncodeError> {
+    pub fn decode<T>(bytes: &[T]) -> Result<Vec<i32>, EncodeError>
+    where
+        T: num_integer::Integer + NumCast + PrimInt,
+    {
         let mut output = Vec::new();
         let mut out_len: i32 = 0;
 
+        let max: i32 = NumCast::from(i16::MAX).unwrap();
+        let min: i32 = NumCast::from(i16::MIN).unwrap();
+
         for item in bytes {
-            if *item == i16::MAX || *item == i16::MIN {
-                let item: i32 = NumCast::from(*item).unwrap();
+            let item: i32 = NumCast::from(*item).unwrap();
+
+            if item == max || item == min {
                 out_len += item;
             } else {
-                let item: i32 = NumCast::from(*item).unwrap();
                 out_len += item;
                 output.push(out_len);
                 out_len = 0;
