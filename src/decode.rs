@@ -126,7 +126,7 @@ impl<'a> Strategy for Decoder<'a> {
                 let res: Vec<i32> = try!(RecursiveIndexing::decode(&data[..]));
                 Ok(StrategyDataTypes::VecInt32(res))
             },
-            _ => Err(EncodeError::Codec),
+            _ => Err(EncodeError::Codec(format!("{}", header.codec))),
         }
     }
 }
@@ -191,6 +191,17 @@ mod tests {
 
         let actual = decoder.field().unwrap();
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_fail_apply_strategy() {
+        let data = [
+            0, 0, 0, 20, 0, 0, 0, 2, 0, 0, 0, 0, 63, 153, 153, 154, 64, 57, 153, 154
+        ];
+        let mut decoder = Decoder::new(&data);
+        if let EncodeError::Codec(err) = decoder.apply().unwrap_err() {
+            assert_eq!(err, "20");
+        }
     }
 
     #[test]
