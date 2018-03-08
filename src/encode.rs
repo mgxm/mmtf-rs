@@ -61,89 +61,31 @@ impl From<io::Error> for EncodeError {
     }
 }
 
-impl From<StrategyDataTypes> for Option<Vec<i8>> {
-    fn from(value: StrategyDataTypes) -> Option<Vec<i8>> {
-        Some(From::from(value))
-    }
-}
-
-impl From<StrategyDataTypes> for Option<Vec<char>> {
-    fn from(value: StrategyDataTypes) -> Option<Vec<char>> {
-        Some(From::from(value))
-    }
-}
-
-impl From<StrategyDataTypes> for Option<Vec<String>> {
-    fn from(value: StrategyDataTypes) -> Option<Vec<String>> {
-        Some(From::from(value))
-    }
-}
-
-impl From<StrategyDataTypes> for Option<Vec<i32>> {
-    fn from(value: StrategyDataTypes) -> Option<Vec<i32>> {
-        Some(From::from(value))
-    }
-}
-
-impl From<StrategyDataTypes> for Option<Vec<f32>> {
-    fn from(value: StrategyDataTypes) -> Option<Vec<f32>> {
-        Some(From::from(value))
-    }
-}
-
-impl From<StrategyDataTypes> for Vec<char> {
-    fn from(value: StrategyDataTypes) -> Vec<char> {
-        match value {
-            StrategyDataTypes::VecChar(some) => some,
-            _ => unreachable!(),
+macro_rules! from_strategy_for {
+    ($p:path, $type:ty) => {
+        impl From<StrategyDataTypes> for $type {
+            fn from(value: StrategyDataTypes) -> $type {
+                match value {
+                    $p(some) => some,
+                    _ => unreachable!()
+                }
+            }
+        }
+        impl From<StrategyDataTypes> for Option<$type> {
+            fn from(value: StrategyDataTypes) -> Option<$type> {
+                Some(From::from(value))
+            }
         }
     }
 }
 
-impl From<StrategyDataTypes> for Vec<String> {
-    fn from(value: StrategyDataTypes) -> Vec<String> {
-        match value {
-            StrategyDataTypes::VecString(some) => some,
-            _ => unreachable!(),
-        }
-    }
-}
+from_strategy_for!(StrategyDataTypes::VecChar, Vec<char>);
+from_strategy_for!(StrategyDataTypes::VecString, Vec<String>);
+from_strategy_for!(StrategyDataTypes::VecInt16, Vec<i16>);
+from_strategy_for!(StrategyDataTypes::VecInt32, Vec<i32>);
+from_strategy_for!(StrategyDataTypes::VecFloat32, Vec<f32>);
+from_strategy_for!(StrategyDataTypes::VecInt8, Vec<i8>);
 
-impl From<StrategyDataTypes> for Vec<i16> {
-    fn from(value: StrategyDataTypes) -> Vec<i16> {
-        match value {
-            StrategyDataTypes::VecInt16(some) => some,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<StrategyDataTypes> for Vec<i32> {
-    fn from(value: StrategyDataTypes) -> Vec<i32> {
-        match value {
-            StrategyDataTypes::VecInt32(some) => some,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<StrategyDataTypes> for Vec<f32> {
-    fn from(value: StrategyDataTypes) -> Vec<f32> {
-        match value {
-            StrategyDataTypes::VecFloat32(some) => some,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<StrategyDataTypes> for Vec<i8> {
-    fn from(value: StrategyDataTypes) -> Vec<i8> {
-        match value {
-            StrategyDataTypes::VecInt8(some) => some,
-            _ => unreachable!(),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
