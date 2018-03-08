@@ -114,6 +114,11 @@ impl Delta {
     where
         T: num_integer::Integer + NumCast + PrimInt,
     {
+        if bytes.len() <= 1 {
+            let err = format!("Delta::encode() error: bytes length should be greater than {}", bytes.len());
+            return Err(EncodeError::Encoding(err))
+        }
+
         let mut buffer: Vec<i32> = Vec::with_capacity(bytes.len() as usize);
 
         let mut position = NumCast::from(bytes[0]).unwrap();
