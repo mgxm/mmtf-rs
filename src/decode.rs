@@ -4,7 +4,7 @@ use serde::de::Deserializer;
 use serde_bytes;
 
 use super::encode::{EncodeError, Header, HeaderLayout, Strategy, StrategyDataTypes};
-use super::encoding::{IntegerEncoding, RunLength};
+use super::encoding::{IntegerEncoding, RecursiveIndexing, RunLength};
 use super::codec::{DeltaRunlength, IntegerDeltaRecursive, IntegerRunLength};
 use super::binary_decoder;
 
@@ -98,10 +98,34 @@ impl<'a> Strategy for Decoder<'a> {
                 IntegerEncoding::decode(&r, header.parameter)
                     .and_then(|v| Ok(StrategyDataTypes::VecFloat32(v)))
             }
-            12 => unimplemented!(),
-            13 => unimplemented!(),
-            14 => unimplemented!(),
-            15 => unimplemented!(),
+            12 => {
+                let data: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
+                let res: Vec<f32> = try!(
+                    RecursiveIndexing::decode(&data)
+                        .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
+                        .and_then(|v| Ok(v))
+                );
+                Ok(StrategyDataTypes::VecFloat32(res))
+            }
+            13 => {
+                let data: Vec<i8> = try!(binary_decoder::Interpret::from(&field[..]));
+                let res: Vec<f32> = try!(
+                    RecursiveIndexing::decode(&data[..])
+                        .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
+                        .and_then(|v| Ok(v))
+                );
+                Ok(StrategyDataTypes::VecFloat32(res))
+            }
+            14 => {
+                let data: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
+                let res: Vec<i32> = try!(RecursiveIndexing::decode(&data[..]));
+                Ok(StrategyDataTypes::VecInt32(res))
+            },
+            15 => {
+                let data: Vec<i8> = try!(binary_decoder::Interpret::from(&field[..]));
+                let res: Vec<i32> = try!(RecursiveIndexing::decode(&data[..]));
+                Ok(StrategyDataTypes::VecInt32(res))
+            },
             _ => Err(EncodeError::Codec),
         }
     }
