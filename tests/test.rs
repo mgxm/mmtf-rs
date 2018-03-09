@@ -40,7 +40,7 @@ fn it_decode_files() {
 
         let mmtf_json: Value = serde_json::from_reader(json_file).unwrap();
 
-        let mmtf = Mmtf::from_file(&mmtf_file).unwrap();
+        let mmtf = Mmtf::from(&mmtf_file).unwrap();
 
         assert_eq!(
             mmtf.mmtf_version,

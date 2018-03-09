@@ -26,7 +26,7 @@ extern crate mmtf;
 use std::fd::File;
 
 let file = File::open("/path/to/file.mmtf");
-let mmtf = Mmtf::from_file(file);
+let mmtf = Mmtf::from(file);
 
 ```
 
