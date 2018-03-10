@@ -37,7 +37,7 @@ impl<'a> Header for Decoder<'a> {
         let header_len = self.reader.get_ref().len();
         if header_len < 12 {
             let err = format!("bytes length should be more than {}", header_len);
-            return Err(EncodeError::Header(err));
+            Err(EncodeError::Header(err))
         } else {
             let codec = try!(self.reader.read_i32::<BigEndian>());
             let length = try!(self.reader.read_i32::<BigEndian>());
@@ -103,7 +103,7 @@ impl<'a> Strategy for Decoder<'a> {
                 let res: Vec<f32> = try!(
                     RecursiveIndexing::decode(&data)
                         .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
-                        .and_then(|v| Ok(v))
+                        .and_then(Ok)
                 );
                 Ok(StrategyDataTypes::VecFloat32(res))
             }
@@ -112,7 +112,7 @@ impl<'a> Strategy for Decoder<'a> {
                 let res: Vec<f32> = try!(
                     RecursiveIndexing::decode(&data[..])
                         .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
-                        .and_then(|v| Ok(v))
+                        .and_then(Ok)
                 );
                 Ok(StrategyDataTypes::VecFloat32(res))
             }
@@ -187,7 +187,7 @@ mod tests {
         ];
         let expected = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
         let mut decoder = Decoder::new(&data);
-        decoder.header();
+        decoder.header().unwrap();
 
         let actual = decoder.field().unwrap();
         assert_eq!(expected, actual);

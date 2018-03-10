@@ -3,7 +3,6 @@ use super::decode;
 use serde::Deserialize;
 use rmps::Deserializer;
 use rmps::decode::Error;
-use std::fs::File;
 use std::io::Read;
 
 /// Transform List

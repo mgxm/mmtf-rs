@@ -124,7 +124,7 @@ impl IntegerDeltaRecursive {
         RecursiveIndexing::decode(&data)
             .and_then(|v| Delta::decode(&v))
             .and_then(|v| IntegerEncoding::decode(&v, factor))
-            .and_then(|v| Ok(v))
+            .and_then(Ok)
     }
 
     /// Encode any array of 'T' where `T ` can be any Float.
