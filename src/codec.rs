@@ -29,7 +29,7 @@ pub struct DeltaRunlength;
 impl DeltaRunlength {
     /// Decode given bytes
     pub fn decode(bytes: &[u8]) -> Result<Vec<i32>, EncodeError> {
-        let data: Vec<i32> = try!(binary_decoder::Interpret::from(bytes));
+        let data: Vec<i32> = binary_decoder::Interpret::from(bytes)?;
         RunLength::decode(&data)
             .and_then(|v| Delta::decode(&v))
             .and_then(Ok)
@@ -43,7 +43,7 @@ impl DeltaRunlength {
         Delta::encode(value)
             .and_then(|v| RunLength::encode(&v))
             .and_then(|v| {
-                let result: Vec<u8> = try!(Interpret::from(&v[..]));
+                let result: Vec<u8> = Interpret::from(&v[..])?;
                 Ok(result)
             })
     }
@@ -74,7 +74,7 @@ pub struct IntegerRunLength;
 impl IntegerRunLength {
     /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Result<Vec<f32>, EncodeError> {
-        let data: Vec<i32> = try!(binary_decoder::Interpret::from(bytes));
+        let data: Vec<i32> = binary_decoder::Interpret::from(bytes)?;
         RunLength::decode(&data)
             .and_then(|v| IntegerEncoding::decode(&v, factor))
             .and_then(Ok)
@@ -88,7 +88,7 @@ impl IntegerRunLength {
         IntegerEncoding::encode(value, factor)
             .and_then(|v| RunLength::encode(&v))
             .and_then(|v| {
-                let result: Vec<u8> = try!(Interpret::from(&v[..]));
+                let result: Vec<u8> = Interpret::from(&v[..])?;
                 Ok(result)
             })
     }
@@ -119,7 +119,7 @@ pub struct IntegerDeltaRecursive;
 impl IntegerDeltaRecursive {
     /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Result<Vec<f32>, EncodeError> {
-        let data: Vec<i16> = try!(binary_decoder::Interpret::from(bytes));
+        let data: Vec<i16> = binary_decoder::Interpret::from(bytes)?;
 
         RecursiveIndexing::decode(&data)
             .and_then(|v| Delta::decode(&v))
@@ -136,7 +136,7 @@ impl IntegerDeltaRecursive {
             .and_then(|v| Delta::encode(&v))
             .and_then(|v| RecursiveIndexing::encode(&v))
             .and_then(|v| {
-                let result: Vec<u8> = try!(Interpret::from(&v[..]));
+                let result: Vec<u8> = Interpret::from(&v[..])?;
                 Ok(result)
             })
     }

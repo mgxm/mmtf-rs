@@ -15,7 +15,7 @@ impl<'a> Interpret<&'a [i32]> for Vec<u8> {
     fn from(values: &'a [i32]) -> Result<Vec<u8>, Error> {
         let mut wtr = vec![];
         for v in values {
-            try!(wtr.write_i32::<BigEndian>(*v));
+            wtr.write_i32::<BigEndian>(*v)?;
         }
         Ok(wtr)
     }
@@ -25,7 +25,7 @@ impl<'a> Interpret<&'a [i16]> for Vec<u8> {
     fn from(values: &'a [i16]) -> Result<Vec<u8>, Error> {
         let mut wtr = vec![];
         for v in values {
-            try!(wtr.write_i16::<BigEndian>(*v));
+            wtr.write_i16::<BigEndian>(*v)?;
         }
         Ok(wtr)
     }
@@ -41,7 +41,7 @@ impl<'a> Interpret<&'a [u8]> for Vec<char> {
         let mut rdr = Cursor::new(values);
 
         for _ in 0..length / 4 {
-            let c = try!(rdr.read_u32::<LittleEndian>());
+            let c = rdr.read_u32::<LittleEndian>()?;
             buffer.push(from_u32(c).unwrap());
         }
 
@@ -90,7 +90,7 @@ impl<'a> Interpret<&'a [u8]> for Vec<f32> {
         let mut buffer = Vec::with_capacity(length);
 
         for _ in 0..length / 4 {
-            let r = try!(bytes.read_f32::<BigEndian>());
+            let r = bytes.read_f32::<BigEndian>()?;
             buffer.push(r);
         }
         Ok(buffer)
@@ -107,7 +107,7 @@ impl<'a> Interpret<&'a [u8]> for Vec<i32> {
         let mut buffer = Vec::with_capacity(length);
 
         for _ in 0..length / 4 {
-            let r = try!(bytes.read_i32::<BigEndian>());
+            let r = bytes.read_i32::<BigEndian>()?;
             buffer.push(r);
         }
         Ok(buffer)
@@ -122,7 +122,7 @@ impl<'a> Interpret<&'a [u8]> for Vec<i8> {
         let mut buffer = Vec::new();
 
         for _ in 0..length {
-            let r = try!(bytes.read_i8());
+            let r = bytes.read_i8()?;
             buffer.push(r);
         }
         assert!(buffer.len() == length);
@@ -139,7 +139,7 @@ impl<'a> Interpret<&'a [u8]> for Vec<i16> {
         let mut bytes = Cursor::new(values);
         let mut buffer = Vec::with_capacity(length);
         for _ in 0..length / 2 {
-            let r = try!(bytes.read_i16::<BigEndian>());
+            let r = bytes.read_i16::<BigEndian>()?;
             buffer.push(r);
         }
         Ok(buffer)

@@ -331,7 +331,7 @@ impl Mmtf {
     /// ```
     pub fn from<R: Read>(r: R) -> Result<Self, Error> {
         let mut de = Deserializer::new(r);
-        let mmtf: Mmtf = try!(Deserialize::deserialize(&mut de));
+        let mmtf: Mmtf = Deserialize::deserialize(&mut de)?;
         Ok(mmtf)
     }
 }

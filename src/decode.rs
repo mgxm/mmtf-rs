@@ -23,7 +23,7 @@ impl<'a> Decoder<'a> {
         // Skip header bytes
         self.reader.set_position(12);
         let mut buffer: Vec<u8> = Vec::new();
-        try!(self.reader.read_to_end(&mut buffer));
+        self.reader.read_to_end(&mut buffer)?;
         Ok(buffer)
     }
 }
@@ -39,9 +39,9 @@ impl<'a> Header for Decoder<'a> {
             let err = format!("bytes length should be more than {}", header_len);
             Err(EncodeError::Header(err))
         } else {
-            let codec = try!(self.reader.read_i32::<BigEndian>());
-            let length = try!(self.reader.read_i32::<BigEndian>());
-            let parameter = try!(self.reader.read_i32::<BigEndian>());
+            let codec = self.reader.read_i32::<BigEndian>()?;
+            let length = self.reader.read_i32::<BigEndian>()?;
+            let parameter = self.reader.read_i32::<BigEndian>()?;
 
             Ok(HeaderLayout {
                 codec,
@@ -54,38 +54,38 @@ impl<'a> Header for Decoder<'a> {
 
 impl<'a> Strategy for Decoder<'a> {
     fn apply(&mut self) -> Result<StrategyDataTypes, EncodeError> {
-        let header = try!(self.header());
-        let field = try!(self.field());
+        let header = self.header()?;
+        let field = self.field()?;
 
         match header.codec {
             1 => {
-                let decoded: Vec<f32> = try!(binary_decoder::Interpret::from(&field[..]));
+                let decoded: Vec<f32> = binary_decoder::Interpret::from(&field[..])?;
                 Ok(StrategyDataTypes::VecFloat32(decoded))
             }
-            2 => Ok(StrategyDataTypes::VecInt8(try!(
-                binary_decoder::Interpret::from(&field[..])
-            ))),
-            3 => Ok(StrategyDataTypes::VecInt16(try!(
-                binary_decoder::Interpret::from(&field[..])
-            ))),
-            4 => Ok(StrategyDataTypes::VecInt32(try!(
-                binary_decoder::Interpret::from(&field[..])
-            ))),
+            2 => Ok(StrategyDataTypes::VecInt8(
+                binary_decoder::Interpret::from(&field[..])?,
+            )),
+            3 => Ok(StrategyDataTypes::VecInt16(
+                binary_decoder::Interpret::from(&field[..])?,
+            )),
+            4 => Ok(StrategyDataTypes::VecInt32(
+                binary_decoder::Interpret::from(&field[..])?,
+            )),
             5 => {
-                let result: Vec<String> = try!(binary_decoder::Interpret::from(&field[..]));
+                let result: Vec<String> = binary_decoder::Interpret::from(&field[..])?;
                 Ok(StrategyDataTypes::VecString(result))
             }
             6 => {
-                let data: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
+                let data: Vec<i32> = binary_decoder::Interpret::from(&field[..])?;
                 RunLength::decode(&data)
                     .and_then(|v| {
-                        let r: Vec<char> = try!(binary_decoder::Interpret::from(&v[..]));
+                        let r: Vec<char> = binary_decoder::Interpret::from(&v[..])?;
                         Ok(r)
                     })
                     .and_then(|v| Ok(StrategyDataTypes::VecChar(v)))
             }
             7 => {
-                let data: Vec<i32> = try!(binary_decoder::Interpret::from(&field[..]));
+                let data: Vec<i32> = binary_decoder::Interpret::from(&field[..])?;
                 RunLength::decode(&data).and_then(|v| Ok(StrategyDataTypes::VecInt32(v)))
             }
             8 => DeltaRunlength::decode(&field).and_then(|v| Ok(StrategyDataTypes::VecInt32(v))),
@@ -94,38 +94,34 @@ impl<'a> Strategy for Decoder<'a> {
             10 => IntegerDeltaRecursive::decode(&field[..], header.parameter)
                 .and_then(|v| Ok(StrategyDataTypes::VecFloat32(v))),
             11 => {
-                let r: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
+                let r: Vec<i16> = binary_decoder::Interpret::from(&field[..])?;
                 IntegerEncoding::decode(&r, header.parameter)
                     .and_then(|v| Ok(StrategyDataTypes::VecFloat32(v)))
             }
             12 => {
-                let data: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
-                let res: Vec<f32> = try!(
-                    RecursiveIndexing::decode(&data)
-                        .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
-                        .and_then(Ok)
-                );
+                let data: Vec<i16> = binary_decoder::Interpret::from(&field[..])?;
+                let res: Vec<f32> = RecursiveIndexing::decode(&data)
+                    .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
+                    .and_then(Ok)?;
                 Ok(StrategyDataTypes::VecFloat32(res))
             }
             13 => {
-                let data: Vec<i8> = try!(binary_decoder::Interpret::from(&field[..]));
-                let res: Vec<f32> = try!(
-                    RecursiveIndexing::decode(&data[..])
-                        .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
-                        .and_then(Ok)
-                );
+                let data: Vec<i8> = binary_decoder::Interpret::from(&field[..])?;
+                let res: Vec<f32> = RecursiveIndexing::decode(&data[..])
+                    .and_then(|v| IntegerEncoding::decode(&v, header.parameter))
+                    .and_then(Ok)?;
                 Ok(StrategyDataTypes::VecFloat32(res))
             }
             14 => {
-                let data: Vec<i16> = try!(binary_decoder::Interpret::from(&field[..]));
-                let res: Vec<i32> = try!(RecursiveIndexing::decode(&data[..]));
+                let data: Vec<i16> = binary_decoder::Interpret::from(&field[..])?;
+                let res: Vec<i32> = RecursiveIndexing::decode(&data[..])?;
                 Ok(StrategyDataTypes::VecInt32(res))
-            },
+            }
             15 => {
-                let data: Vec<i8> = try!(binary_decoder::Interpret::from(&field[..]));
-                let res: Vec<i32> = try!(RecursiveIndexing::decode(&data[..]));
+                let data: Vec<i8> = binary_decoder::Interpret::from(&field[..])?;
+                let res: Vec<i32> = RecursiveIndexing::decode(&data[..])?;
                 Ok(StrategyDataTypes::VecInt32(res))
-            },
+            }
             _ => Err(EncodeError::Codec(format!("{}", header.codec))),
         }
     }
