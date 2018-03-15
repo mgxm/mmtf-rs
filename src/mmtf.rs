@@ -1,8 +1,7 @@
 use super::decode;
 
 use serde::Deserialize;
-use rmps::Deserializer;
-use rmps::decode::Error;
+use rmps;
 use std::io::Read;
 
 /// Transform List
@@ -189,123 +188,107 @@ pub struct Mmtf {
 
     /// Pairs of values represent indices of covalently bonded atoms.
     /// The indices point to the Atom data arrays. Only covalent bonds may be given.
-    #[serde(deserialize_with = "decode::as_decoder")]
     pub bond_atom_list: Vec<i32>,
 
-    /// Array of bond orders for bonds in [`bond_atom_list`](#structfield.bond_atom_list).
-    ///
-    /// *Note*: Must be values between 1 and 4, defining **single**,
-    /// **double**, **triple**, and **quadruple** bonds.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub bond_order_list: Option<Vec<i8>>,
+    // /// Array of bond orders for bonds in [`bond_atom_list`](#structfield.bond_atom_list).
+    // ///
+    // /// *Note*: Must be values between 1 and 4, defining **single**,
+    // /// **double**, **triple**, and **quadruple** bonds.
+    // pub bond_order_list: Option<Vec<i8>>,
 
-    /// Array of *x* atom coordinates, in **Å**. One entry for each atom and coordinate.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub x_coord_list: Vec<f32>,
+    // /// Array of *x* atom coordinates, in **Å**. One entry for each atom and coordinate.
+    // pub x_coord_list: Vec<f32>,
 
-    /// Array of *y* atom coordinates, in **Å**. One entry for each atom and coordinate.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub y_coord_list: Vec<f32>,
+    // /// Array of *y* atom coordinates, in **Å**. One entry for each atom and coordinate.
+    // pub y_coord_list: Vec<f32>,
 
-    /// Array of *z* atom coordinates, in **Å**. One entry for each atom and coordinate.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub z_coord_list: Vec<f32>,
+    // /// Array of *z* atom coordinates, in **Å**. One entry for each atom and coordinate.
+    // pub z_coord_list: Vec<f32>,
 
-    /// Array of atom B-factors in in **Å^2**. One entry for each atom.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub b_factor_list: Option<Vec<f32>>,
+    // /// Array of atom B-factors in in **Å^2**. One entry for each atom.
+    // pub b_factor_list: Option<Vec<f32>>,
 
-    /// `Vec` of atom serial numbers. One entry for each atom.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub atom_id_list: Option<Vec<i32>>,
+    // /// `Vec` of atom serial numbers. One entry for each atom.
+    // pub atom_id_list: Option<Vec<i32>>,
 
-    /// `Vec` of alternate location labels, one for each atom.
-    /// The lack of an alternate location label must be denoted by a 0 byte.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub alt_loc_list: Option<Vec<char>>,
+    // /// `Vec` of alternate location labels, one for each atom.
+    // /// The lack of an alternate location label must be denoted by a 0 byte.
+    // pub alt_loc_list: Option<Vec<char>>,
 
-    /// `Vec` of atom occupancies, one for each atom.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub occupancy_list: Option<Vec<f32>>,
+    // /// `Vec` of atom occupancies, one for each atom.
+    // pub occupancy_list: Option<Vec<f32>>,
 
-    /// `Vec` of group (residue) numbers. One entry for each group/residue.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub group_id_list: Vec<i32>,
+    // /// `Vec` of group (residue) numbers. One entry for each group/residue.
+    // pub group_id_list: Vec<i32>,
 
-    /// `Vec` of pointers to [`GroupType`](GroupType) entries
-    /// in [`group_list`](#structfield.group_list) by their keys.
-    /// One entry for each residue, thus the number of residues
-    /// is equal to the length of this field.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub group_type_list: Vec<i32>,
+    // /// `Vec` of pointers to [`GroupType`](GroupType) entries
+    // /// in [`group_list`](#structfield.group_list) by their keys.
+    // /// One entry for each residue, thus the number of residues
+    // /// is equal to the length of this field.
+    // pub group_type_list: Vec<i32>,
 
-    /// Array of secondary structure assignments coded according
-    /// to the following table, which shows the eight different
-    /// types of secondary structure the
-    /// [DSSP](https://dx.doi.org/10.1002%2Fbip.360221211)
-    /// algorithm distinguishes. If the field is included there
-    /// must be an entry for each group (residue) either in all
-    /// models or only in the first model.
-    ///
-    /// | Code | Name         |
-    /// |------|--------------|
-    /// |    0 | pi helix     |
-    /// |    1 | bend         |
-    /// |    2 | alpha helix  |
-    /// |    3 | extended     |
-    /// |    4 | 3-10 helix   |
-    /// |    5 | bridge       |
-    /// |    6 | turn         |
-    /// |    7 | coil         |
-    /// |   -1 | undefined    |
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub sec_struct_list: Option<Vec<i8>>,
+    // /// Array of secondary structure assignments coded according
+    // /// to the following table, which shows the eight different
+    // /// types of secondary structure the
+    // /// [DSSP](https://dx.doi.org/10.1002%2Fbip.360221211)
+    // /// algorithm distinguishes. If the field is included there
+    // /// must be an entry for each group (residue) either in all
+    // /// models or only in the first model.
+    // ///
+    // /// | Code | Name         |
+    // /// |------|--------------|
+    // /// |    0 | pi helix     |
+    // /// |    1 | bend         |
+    // /// |    2 | alpha helix  |
+    // /// |    3 | extended     |
+    // /// |    4 | 3-10 helix   |
+    // /// |    5 | bridge       |
+    // /// |    6 | turn         |
+    // /// |    7 | coil         |
+    // /// |   -1 | undefined    |
+    // pub sec_struct_list: Option<Vec<i8>>,
 
-    /// Array of insertion codes, one for each group (residue).
-    /// The lack of an insertion code must be denoted by a 0 byte.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub ins_code_list: Option<Vec<char>>,
+    // /// Array of insertion codes, one for each group (residue).
+    // /// The lack of an insertion code must be denoted by a 0 byte.
+    // pub ins_code_list: Option<Vec<char>>,
 
-    /// Array of indices that point into the [`sequence`](struct.Entity.html#structfield.sequence)
-    /// property of an [`Entity`](Entity) object in the [`entity_list`](#structfield.entity_list) field that
-    /// is associated with the chain the group belongs to (i.e. the index of the chain is
-    /// included in the [`chain_index_list`](struct.Entity.html#structfield.chain_index_list) of the `entity`).
-    /// There is one entry for each group (residue). It must be set to -1 when a group entry has no associated entity
-    /// (and thus no sequence), for example water molecules.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub sequence_index_list: Option<Vec<i32>>,
+    // /// Array of indices that point into the [`sequence`](struct.Entity.html#structfield.sequence)
+    // /// property of an [`Entity`](Entity) object in the [`entity_list`](#structfield.entity_list) field that
+    // /// is associated with the chain the group belongs to (i.e. the index of the chain is
+    // /// included in the [`chain_index_list`](struct.Entity.html#structfield.chain_index_list) of the `entity`).
+    // /// There is one entry for each group (residue). It must be set to -1 when a group entry has no associated entity
+    // /// (and thus no sequence), for example water molecules.
+    // pub sequence_index_list: Option<Vec<i32>>,
 
-    /// `Vec` of chain IDs, for storing data from `mmCIF` files.
-    /// This field should contain the value from `the label_asym_id` `mmCIF` data item
-    /// and the [`chain_name_list`](#structfield.chain_name_list) the `auth_asym_id`
-    /// `mmCIF` data item.
-    ///
-    /// In PDB files there is only a single name/identifier for chains that corresponds
-    /// to the `auth_asym_id` item. When there is only a single chain identifier available
-    /// it must be stored in the `chain_id_list` field.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub chain_id_list: Vec<String>,
+    // /// `Vec` of chain IDs, for storing data from `mmCIF` files.
+    // /// This field should contain the value from `the label_asym_id` `mmCIF` data item
+    // /// and the [`chain_name_list`](#structfield.chain_name_list) the `auth_asym_id`
+    // /// `mmCIF` data item.
+    // ///
+    // /// In PDB files there is only a single name/identifier for chains that corresponds
+    // /// to the `auth_asym_id` item. When there is only a single chain identifier available
+    // /// it must be stored in the `chain_id_list` field.
+    // pub chain_id_list: Vec<String>,
 
-    /// `Vec` of chain names. This field allows to specify an additional set of labels/names
-    /// for chains.
-    ///
-    /// For example, it can be used to store both, the `label_asym_id`
-    /// (in [`chain_id_list`](#structfield.chain_id_list)) and the `auth_asym_id`
-    /// (in [`chain_name_list`](#structfield.chain_name_list)) from mmCIF files.
-    #[serde(deserialize_with = "decode::as_decoder")]
-    pub chain_name_list: Option<Vec<String>>,
+    // /// `Vec` of chain names. This field allows to specify an additional set of labels/names
+    // /// for chains.
+    // ///
+    // /// For example, it can be used to store both, the `label_asym_id`
+    // /// (in [`chain_id_list`](#structfield.chain_id_list)) and the `auth_asym_id`
+    // /// (in [`chain_name_list`](#structfield.chain_name_list)) from mmCIF files.
+    // pub chain_name_list: Option<Vec<String>>,
 
-    /// `Vec` of the number of groups (aka residues) in each chain.
-    /// The number of chains is thus equal to the length of the
-    /// `groups_per_chain` field.
-    /// In conjunction with [`chains_per_model`](#structfield.chains_per_model),
-    /// the array allows looping over all chains
-    pub groups_per_chain: Vec<i32>,
+    // /// `Vec` of the number of groups (aka residues) in each chain.
+    // /// The number of chains is thus equal to the length of the
+    // /// `groups_per_chain` field.
+    // /// In conjunction with [`chains_per_model`](#structfield.chains_per_model),
+    // /// the array allows looping over all chains
+    // pub groups_per_chain: Vec<i32>,
 
-    /// The number of models in a structure is equal to the length of the
-    /// `chains_per_model` field.
-    /// The `chains_per_model` field also defines which chains belong to each model.
-    pub chains_per_model: Vec<i32>,
+    // /// The number of models in a structure is equal to the length of the
+    // /// `chains_per_model` field.
+    // /// The `chains_per_model` field also defines which chains belong to each model.
+    // pub chains_per_model: Vec<i32>,
 }
 
 impl Mmtf {
@@ -329,9 +312,10 @@ impl Mmtf {
     ///
     /// assert_eq!("1.0.0", mmtf.mmtf_version);
     /// ```
-    pub fn from<R: Read>(r: R) -> Result<Self, Error> {
-        let mut de = Deserializer::new(r);
-        let mmtf: Mmtf = Deserialize::deserialize(&mut de)?;
+    pub fn from<R: Read>(r: R) -> Result<Self, rmps::decode::Error> {
+        let mut msgpack = rmps::Deserializer::new(r);
+        let mut mmtf = super::de::Deserializer::new(&mut msgpack);
+        let mmtf: Mmtf = Deserialize::deserialize(mmtf)?;
         Ok(mmtf)
     }
 }

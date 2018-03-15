@@ -9,12 +9,12 @@ use super::codec::{DeltaRunlength, IntegerDeltaRecursive, IntegerRunLength};
 use super::binary_decoder;
 
 #[derive(Debug)]
-struct Decoder<'a> {
+pub struct Decoder<'a> {
     reader: Cursor<&'a [u8]>,
 }
 
 impl<'a> Decoder<'a> {
-    fn new(reader: &'a [u8]) -> Self {
+    pub fn new(reader: &'a [u8]) -> Self {
         let reader = Cursor::new(reader);
         Decoder { reader }
     }

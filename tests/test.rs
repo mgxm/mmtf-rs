@@ -1,9 +1,10 @@
 extern crate mmtf;
 extern crate serde_json;
-// extern crate serde_transcode;
+
 use mmtf::Mmtf;
 use std::fs::{self, DirEntry, File};
 use std::path::Path;
+use std::string::String;
 use serde_json::Value;
 
 #[test]
@@ -38,47 +39,69 @@ fn it_decode_files() {
         let mut json_file = File::open(json_file_name).unwrap();
         let mmtf_file = File::open(file.path()).unwrap();
 
-        let mmtf_json: Value = serde_json::from_reader(json_file).unwrap();
+        let mmtf_json: Mmtf = serde_json::from_reader(json_file).unwrap();
 
         let mmtf = Mmtf::from(&mmtf_file).unwrap();
 
-        assert_eq!(
-            mmtf.mmtf_version,
-            mmtf_json["mmtfVersion"].as_str().unwrap()
-        );
-        assert_eq!(
-            mmtf.mmtf_producer,
-            mmtf_json["mmtfProducer"].as_str().unwrap()
-        );
-        assert_eq!(
-            mmtf.unit_cell.unwrap(),
-            mmtf_json["unitCell"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|x| x.as_f64().unwrap())
-                .collect::<Vec<f64>>()
-        );
+        assert_eq!(mmtf.mmtf_version, mmtf_json.mmtf_version);
 
-        if let Some(space_group) = mmtf.space_group {
-            assert_eq!(space_group, mmtf_json["spaceGroup"]);
-        };
+        assert_eq!(mmtf.mmtf_producer, mmtf_json.mmtf_producer);
 
-        if let Some(structure) = mmtf.structure_id {
-            assert_eq!(structure, mmtf_json["structureId"]);
-        };
+        assert_eq!(mmtf.unit_cell.unwrap(), mmtf_json.unit_cell.unwrap());
 
-        if let Some(title) = mmtf.title {
-            assert_eq!(title, mmtf_json["title"]);
-        };
+        assert_eq!(mmtf.space_group, mmtf_json.space_group);
 
-        if let Some(deposition_date) = mmtf.deposition_date {
-            assert_eq!(deposition_date, mmtf_json["depositionDate"]);
-        };
+        assert_eq!(mmtf.structure_id, mmtf_json.structure_id);
 
-        if let Some(release_date) = mmtf.release_date {
-            assert_eq!(release_date, mmtf_json["releaseDate"]);
-        };
+        assert_eq!(mmtf.title, mmtf_json.title);
+
+        assert_eq!(mmtf.deposition_date, mmtf_json.deposition_date);
+
+        assert_eq!(mmtf.release_date, mmtf_json.release_date);
+
+        assert_eq!(mmtf.experimental_methods, mmtf_json.experimental_methods);
+
+        assert_eq!(mmtf.resolution, mmtf_json.resolution);
+
+        assert_eq!(mmtf.r_free, mmtf_json.r_free);
+
+        assert_eq!(mmtf.r_work, mmtf_json.r_work);
+
+        assert_eq!(mmtf.num_bonds, mmtf_json.num_bonds);
+
+        assert_eq!(mmtf.num_atoms, mmtf_json.num_atoms);
+
+        assert_eq!(mmtf.num_groups, mmtf_json.num_groups);
+
+        assert_eq!(mmtf.num_chains, mmtf_json.num_chains);
+
+        assert_eq!(mmtf.num_models, mmtf_json.num_models);
+
+        // TODO: binary operation `==` cannot be applied to type `std::vec::Vec<mmtf::mmtf::GroupType>`
+        // assert_eq!(mmtf.group_list, mmtf_json.group_list);
+
+        assert_eq!(mmtf.bond_atom_list, mmtf_json.bond_atom_list);
+
+
+
+
+
+        // if let Some(bio_assembly) = mmtf.bio_assembly_list {
+        //     let bio_assembly_json = &mmtf_json["bioAssemblyList"];
+
+        //     for (bio_index, assembly) in bio_assembly.iter().enumerate() {
+        //         assert_eq!(assembly.name, bio_assembly_json[bio_index]["name"]);
+        //         for (trans_index, transform) in assembly.transform_list.iter().enumerate() {
+        //             let chain_index = bio_assembly_json[bio_index]["transformList"][trans_index]
+        //                 ["chainIndexList"]
+        //                 .as_array()
+        //                 .unwrap()
+        //                 .iter()
+        //                 .map(|x| i32::from(x) )
+        //                 .collect::<Vec<i32>>();
+        //             assert_eq!(transform.chain_index_list, chain_index);
+        //         }
+        //     }
+        // };
     }
 }
-

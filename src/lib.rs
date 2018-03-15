@@ -28,6 +28,7 @@ extern crate itertools;
 extern crate num_integer;
 extern crate num_traits;
 extern crate rmp_serde as rmps;
+#[macro_use]
 extern crate serde;
 extern crate serde_bytes;
 #[macro_use]
@@ -39,5 +40,6 @@ pub mod codec;
 pub mod encode;
 pub mod decode;
 pub mod mmtf;
+pub mod de;
 
 pub use mmtf::Mmtf;
