@@ -1,6 +1,6 @@
 use super::decode;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use rmps::Deserializer;
 use rmps::decode::Error;
 use std::io::Read;
@@ -10,7 +10,7 @@ use std::io::Read;
 /// Instructions on how to transform coordinates for an array
 /// of chains to create (biological) assemblies.
 /// The translational component is given in **Å**.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Transform {
     /// Pointers into chain data fields
@@ -20,7 +20,7 @@ pub struct Transform {
 }
 
 /// Bio Assembly
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BioAssembly {
     /// Array of transform objects
@@ -43,7 +43,7 @@ pub struct BioAssembly {
 /// entries of the [`Mmtf.sequence_index_list`](struct.Mmtf.html#structfield.sequence_index_list) field.
 /// Further, characters follow the IUPAC single letter code for protein
 /// or *DNA/RNA* residues, otherwise the character 'X'.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Entity {
     /// Pointers into chain data fields
@@ -67,7 +67,7 @@ pub struct Entity {
 /// there are two or more entries given that have the same sequence
 /// index, group id (and insertion code) but are of a different group
 /// type. The defining property is their identical sequence index.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupType {
     /// `Vec` of formal charges
@@ -98,7 +98,7 @@ pub struct GroupType {
 }
 
 /// MMTF Fields
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Mmtf {
     /// The version number of the specification the file adheres to.
