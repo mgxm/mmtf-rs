@@ -23,6 +23,7 @@
 //!
 #![warn(missing_debug_implementations)]
 
+extern crate rdir_encoding;
 extern crate byteorder;
 extern crate itertools;
 extern crate num_integer;
@@ -34,7 +35,6 @@ extern crate serde_bytes;
 extern crate serde_derive;
 
 pub mod binary_decoder;
-pub mod encoding;
 pub mod codec;
 pub mod encode;
 pub mod decode;

@@ -2,6 +2,8 @@ use std::convert::From;
 use std::fmt;
 use std::io;
 
+use rdir_encoding::RdirError;
+
 #[derive(Debug)]
 /// Map msgpack object into the given targets.
 pub enum StrategyDataTypes {
@@ -39,7 +41,7 @@ pub enum EncodeError {
     Codec(String),
     Header(String),
     Field,
-    Encoding(String),
+    Encoding(RdirError),
     IO(io::Error)
 }
 
@@ -58,6 +60,12 @@ impl fmt::Display for EncodeError {
 impl From<io::Error> for EncodeError {
     fn from(error: io::Error) -> Self {
         EncodeError::IO(error)
+    }
+}
+
+impl From<RdirError> for EncodeError {
+    fn from(error: RdirError) -> Self {
+        EncodeError::Encoding(error)
     }
 }
 

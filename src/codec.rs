@@ -2,7 +2,7 @@ use num_integer::Integer;
 use num_traits::{Float, NumCast, PrimInt, ToPrimitive};
 use binary_decoder::Interpret;
 use binary_decoder;
-use encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
+use rdir_encoding::{Delta, IntegerEncoding, RecursiveIndexing, RunLength};
 use encode::EncodeError;
 
 /// Delta & Runlength
@@ -30,9 +30,8 @@ impl DeltaRunlength {
     /// Decode given bytes
     pub fn decode(bytes: &[u8]) -> Result<Vec<i32>, EncodeError> {
         let data: Vec<i32> = binary_decoder::Interpret::from(bytes)?;
-        RunLength::decode(&data)
-            .and_then(|v| Delta::decode(&v))
-            .and_then(Ok)
+        let decoded = RunLength::decode(&data).and_then(|v| Delta::decode(&v))?;
+        Ok(decoded)
     }
 
     /// Encode any array of 'T' where `T ` can be any Integer.
@@ -40,12 +39,13 @@ impl DeltaRunlength {
     where
         T: Integer + NumCast + PrimInt + ToPrimitive,
     {
-        Delta::encode(value)
+        let delta = Delta::encode(value)
             .and_then(|v| RunLength::encode(&v))
             .and_then(|v| {
                 let result: Vec<u8> = Interpret::from(&v[..])?;
                 Ok(result)
-            })
+            })?;
+        Ok(delta)
     }
 }
 
@@ -75,9 +75,9 @@ impl IntegerRunLength {
     /// Decode given bytes
     pub fn decode(bytes: &[u8], factor: i32) -> Result<Vec<f32>, EncodeError> {
         let data: Vec<i32> = binary_decoder::Interpret::from(bytes)?;
-        RunLength::decode(&data)
-            .and_then(|v| IntegerEncoding::decode(&v, factor))
-            .and_then(Ok)
+        let decoded = RunLength::decode(&data)
+            .and_then(|v| IntegerEncoding::decode(&v, factor))?;
+        Ok(decoded)
     }
 
     /// Encode any array of 'T' where `T ` can be any Float.
@@ -85,12 +85,13 @@ impl IntegerRunLength {
     where
         T: Float + NumCast,
     {
-        IntegerEncoding::encode(value, factor)
+        let encoded = IntegerEncoding::encode(value, factor)
             .and_then(|v| RunLength::encode(&v))
             .and_then(|v| {
                 let result: Vec<u8> = Interpret::from(&v[..])?;
                 Ok(result)
-            })
+            })?;
+        Ok(encoded)
     }
 }
 
@@ -121,10 +122,10 @@ impl IntegerDeltaRecursive {
     pub fn decode(bytes: &[u8], factor: i32) -> Result<Vec<f32>, EncodeError> {
         let data: Vec<i16> = binary_decoder::Interpret::from(bytes)?;
 
-        RecursiveIndexing::decode(&data)
+        let decoded = RecursiveIndexing::decode(&data)
             .and_then(|v| Delta::decode(&v))
-            .and_then(|v| IntegerEncoding::decode(&v, factor))
-            .and_then(Ok)
+            .and_then(|v| IntegerEncoding::decode(&v, factor))?;
+        Ok(decoded)
     }
 
     /// Encode any array of 'T' where `T ` can be any Float.
@@ -132,13 +133,14 @@ impl IntegerDeltaRecursive {
     where
         T: Float + NumCast,
     {
-        IntegerEncoding::encode(value, factor)
+        let encoded = IntegerEncoding::encode(value, factor)
             .and_then(|v| Delta::encode(&v))
             .and_then(|v| RecursiveIndexing::encode(&v))
             .and_then(|v| {
                 let result: Vec<u8> = Interpret::from(&v[..])?;
                 Ok(result)
-            })
+            })?;
+        Ok(encoded)
     }
 }
 

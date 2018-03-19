@@ -1,6 +1,6 @@
 use super::decode;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use rmps::Deserializer;
 use rmps::decode::Error;
 use std::io::Read;
